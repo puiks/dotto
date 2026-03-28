@@ -12,8 +12,8 @@ android {
         applicationId = "com.dotto.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.0.1"
+        versionCode = 2
+        versionName = "0.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -21,9 +21,19 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "../release.keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "dotto123"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "dotto"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "dotto123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

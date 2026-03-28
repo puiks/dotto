@@ -4,6 +4,12 @@ All notable changes to Dotto will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.0.2] - 2026-03-29
+
+### Fixed
+- Release APK now uses proper release signing (was previously unsigned, causing "package info empty" on install)
+- Release workflow uses GitHub Secrets for keystore management
+
 ## [0.0.1] - 2026-03-28
 
 ### Added
