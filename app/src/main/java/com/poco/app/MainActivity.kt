@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.poco.app.navigation.PocoNavGraph
 import com.poco.app.ui.theme.PocoTheme
 
 class MainActivity : ComponentActivity() {
@@ -12,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PocoTheme {
-                // Navigation will be added in Phase 3
+                PocoNavGraph(app = application as PocoApp)
             }
         }
     }
