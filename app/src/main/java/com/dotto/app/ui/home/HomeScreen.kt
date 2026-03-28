@@ -52,6 +52,7 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var habitToDelete by remember { mutableStateOf<HabitUiModel?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val today = remember {
         LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
@@ -120,7 +121,11 @@ fun HomeScreen(
                                 habit = habit,
                                 onToggle = { viewModel.toggleCheckIn(habit.id) },
                                 onClick = { onHabitClick(habit.id) },
-                                onLongClick = { habitToDelete = habit }
+                                onRename = { newName -> viewModel.renameHabit(habit.id, newName) },
+                                onDelete = {
+                                    habitToDelete = habit
+                                    showDeleteConfirm = true
+                                }
                             )
                         }
                     }
@@ -147,25 +152,34 @@ fun HomeScreen(
         )
     }
 
-    // Delete confirmation dialog (triggered by long press)
-    habitToDelete?.let { habit ->
-        AlertDialog(
-            onDismissRequest = { habitToDelete = null },
-            title = { Text("Delete habit?") },
-            text = { Text("Remove \"${habit.name}\" and all its history?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteHabit(habit.id)
+    // Delete confirmation dialog
+    if (showDeleteConfirm) {
+        habitToDelete?.let { habit ->
+            AlertDialog(
+                onDismissRequest = {
+                    showDeleteConfirm = false
                     habitToDelete = null
-                }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                },
+                title = { Text("Delete habit?") },
+                text = { Text("Remove \"${habit.name}\" and all its history?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.deleteHabit(habit.id)
+                        showDeleteConfirm = false
+                        habitToDelete = null
+                    }) {
+                        Text("Delete", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showDeleteConfirm = false
+                        habitToDelete = null
+                    }) {
+                        Text("Cancel")
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { habitToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
+            )
+        }
     }
 }

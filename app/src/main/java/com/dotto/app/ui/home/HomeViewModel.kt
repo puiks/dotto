@@ -82,6 +82,13 @@ class HomeViewModel(
         }
     }
 
+    fun renameHabit(habitId: Long, newName: String) {
+        viewModelScope.launch {
+            val habit = repository.getHabitById(habitId) ?: return@launch
+            repository.updateHabit(habit.copy(name = newName))
+        }
+    }
+
     fun deleteHabit(habitId: Long) {
         viewModelScope.launch {
             repository.deleteHabit(habitId)

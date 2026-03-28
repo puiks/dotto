@@ -18,22 +18,35 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dotto.app.ui.home.HabitUiModel
@@ -45,11 +58,17 @@ fun HabitCard(
     habit: HabitUiModel,
     onToggle: () -> Unit,
     onClick: () -> Unit,
-    onLongClick: () -> Unit = {},
+    onRename: (String) -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     val habitColor = Color(habit.color)
+    var isEditing by remember { mutableStateOf(false) }
+    var editText by remember(habit.name) {
+        mutableStateOf(TextFieldValue(habit.name, TextRange(habit.name.length)))
+    }
+    val focusRequester = remember { FocusRequester() }
 
     val checkScale by animateFloatAsState(
         targetValue = if (habit.isCheckedToday) 1f else 0.85f,
@@ -71,6 +90,20 @@ fun HabitCard(
         "Today is a fresh start"
     }
 
+    fun commitRename() {
+        val trimmed = editText.text.trim()
+        if (trimmed.isNotEmpty() && trimmed != habit.name) {
+            onRename(trimmed)
+        }
+        isEditing = false
+    }
+
+    LaunchedEffect(isEditing) {
+        if (isEditing) {
+            focusRequester.requestFocus()
+        }
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -78,10 +111,17 @@ fun HabitCard(
                 contentDescription = "${habit.name}, $streakText"
             }
             .combinedClickable(
-                onClick = { onClick() },
+                onClick = {
+                    if (isEditing) {
+                        commitRename()
+                    } else {
+                        onClick()
+                    }
+                },
                 onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClick()
+                    isEditing = true
+                    editText = TextFieldValue(habit.name, TextRange(habit.name.length))
                 }
             ),
         shape = RoundedCornerShape(16.dp),
@@ -110,57 +150,104 @@ fun HabitCard(
                 )
 
                 Column(modifier = Modifier.padding(start = 12.dp)) {
-                    Text(
-                        text = habit.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (habit.currentStreak > 0) {
-                        Text(
-                            text = "${habit.currentStreak} day streak \uD83D\uDD25",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (isEditing) {
+                        BasicTextField(
+                            value = editText,
+                            onValueChange = { editText = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
+                            textStyle = MaterialTheme.typography.titleMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            singleLine = true,
+                            cursorBrush = SolidColor(habitColor),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { commitRename() })
                         )
                     } else {
                         Text(
-                            text = "Today is a fresh start",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = habit.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                        if (habit.currentStreak > 0) {
+                            Text(
+                                text = "${habit.currentStreak} day streak \uD83D\uDD25",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Text(
+                                text = "Today is a fresh start",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
 
-            // Right: check button — touch target stays 48dp, only inner circle scales
-            val checkLabel = if (habit.isCheckedToday) "Uncheck ${habit.name}" else "Check in ${habit.name}"
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onToggle()
-                    }
-                    .semantics { contentDescription = checkLabel },
-                contentAlignment = Alignment.Center
-            ) {
-                // Inner visual circle that scales
+            // Right: check button or delete button
+            if (isEditing) {
+                // Delete button
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .scale(checkScale)
                         .clip(CircleShape)
-                        .background(checkBgColor),
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onDelete()
+                        }
+                        .semantics { contentDescription = "Delete ${habit.name}" },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (habit.isCheckedToday) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "✓",
-                            color = Color.White,
+                            text = "✕",
+                            color = MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium
                         )
+                    }
+                }
+            } else {
+                // Check button
+                val checkLabel = if (habit.isCheckedToday) "Uncheck ${habit.name}" else "Check in ${habit.name}"
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onToggle()
+                        }
+                        .semantics { contentDescription = checkLabel },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .scale(checkScale)
+                            .clip(CircleShape)
+                            .background(checkBgColor),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (habit.isCheckedToday) {
+                            Text(
+                                text = "✓",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
                     }
                 }
             }
