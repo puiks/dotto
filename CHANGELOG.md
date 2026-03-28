@@ -4,6 +4,39 @@ All notable changes to Dotto will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.1] - 2026-03-29
+
+### Added
+- Long press habit card to enter edit mode: rename inline, delete button replaces check
+- Smooth horizontal slide navigation transitions (spring curve)
+- Dark mode window background (#121212) to prevent white flash on page transitions
+
+### Fixed
+- App crash on launch: Compose BOM 2024.01.00 → 2024.02.02 (KeyframesSpec.at() NoSuchMethodError)
+- Color picker selection never showing as selected (Color.value.toInt() → Color.toArgb())
+- Edit mode exiting immediately after long press (onFocusChanged initial false trigger)
+- System back press and tap-outside now save and exit edit mode
+- FAB hidden when habit list is empty to avoid duplicate add buttons
+
+### Changed
+- App icon simplified to single dot + checkmark
+- Version bumped to 0.1.1 (versionCode=5)
+
+## [0.1.0] - 2026-03-29
+
+### Added
+- Daily reminder notifications per habit (WorkManager-based, skips if already checked in)
+- Milestone celebrations: full-screen overlay with spring animation at 7/30/100/365 day streaks
+- Home screen widget (Glance): shows top 5 habits with check status and streak count
+- Annual heatmap on detail page: GitHub-style contribution grid for the current year
+- Reminder indicator card on detail page when a reminder is set
+- Bell icon in detail top bar to set/clear reminders
+- Database migration v1→v2 for reminder fields (reminderHour, reminderMinute)
+
+### Changed
+- CLAUDE.md rewritten with product philosophy, UX principles, and expanded architecture guidelines
+- App icon updated to 3×3 calendar dot grid design
+
 ## [0.0.3] - 2026-03-29
 
 ### Added

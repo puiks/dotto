@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.dotto.app.ui.components.AddHabitSheet
 import com.dotto.app.ui.components.MilestoneOverlay
@@ -49,9 +52,11 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onHabitClick: (Long) -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
     val state by viewModel.uiState.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var habitToDelete by remember { mutableStateOf<HabitUiModel?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val today = remember {
         LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
@@ -76,11 +81,13 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddSheet = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add habit")
+            if (!state.isLoading && state.habits.isNotEmpty()) {
+                FloatingActionButton(
+                    onClick = { showAddSheet = true },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add habit")
+                }
             }
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -109,7 +116,10 @@ fun HomeScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(padding),
+                            .padding(padding)
+                            .pointerInput(Unit) {
+                                detectTapGestures { focusManager.clearFocus() }
+                            },
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -118,7 +128,11 @@ fun HomeScreen(
                                 habit = habit,
                                 onToggle = { viewModel.toggleCheckIn(habit.id) },
                                 onClick = { onHabitClick(habit.id) },
-                                onLongClick = { habitToDelete = habit }
+                                onRename = { newName -> viewModel.renameHabit(habit.id, newName) },
+                                onDelete = {
+                                    habitToDelete = habit
+                                    showDeleteConfirm = true
+                                }
                             )
                         }
                     }
@@ -145,25 +159,34 @@ fun HomeScreen(
         )
     }
 
-    // Delete confirmation dialog (triggered by long press)
-    habitToDelete?.let { habit ->
-        AlertDialog(
-            onDismissRequest = { habitToDelete = null },
-            title = { Text("Delete habit?") },
-            text = { Text("Remove \"${habit.name}\" and all its history?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteHabit(habit.id)
+    // Delete confirmation dialog
+    if (showDeleteConfirm) {
+        habitToDelete?.let { habit ->
+            AlertDialog(
+                onDismissRequest = {
+                    showDeleteConfirm = false
                     habitToDelete = null
-                }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                },
+                title = { Text("Delete habit?") },
+                text = { Text("Remove \"${habit.name}\" and all its history?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.deleteHabit(habit.id)
+                        showDeleteConfirm = false
+                        habitToDelete = null
+                    }) {
+                        Text("Delete", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showDeleteConfirm = false
+                        habitToDelete = null
+                    }) {
+                        Text("Cancel")
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { habitToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
+            )
+        }
     }
 }

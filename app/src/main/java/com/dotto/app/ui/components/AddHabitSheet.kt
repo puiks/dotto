@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.toArgb
 import com.dotto.app.ui.theme.HabitColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +33,7 @@ fun AddHabitSheet(
     onSave: (name: String, color: Int) -> Unit,
     isEditMode: Boolean = false,
     initialName: String = "",
-    initialColor: Int = HabitColors.first().value.toInt()
+    initialColor: Int = HabitColors.first().toArgb()
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var name by remember { mutableStateOf(initialName) }

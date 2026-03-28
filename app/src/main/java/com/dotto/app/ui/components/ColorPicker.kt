@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -45,7 +46,7 @@ fun ColorPicker(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         HabitColors.forEachIndexed { index, color ->
-            val colorInt = color.value.toInt()
+            val colorInt = color.toArgb()
             val isSelected = colorInt == selectedColor
             val colorName = ColorNames.getOrElse(index) { "Color ${index + 1}" }
             val scale by animateFloatAsState(
