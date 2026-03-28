@@ -1,6 +1,8 @@
 package com.dotto.app.ui.detail
 
+import android.app.TimePickerDialog
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,11 +46,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dotto.app.ui.components.AddHabitSheet
 import com.dotto.app.ui.detail.components.CalendarGrid
+import com.dotto.app.ui.detail.components.HeatmapGrid
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,9 +62,11 @@ fun DetailScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showEditSheet by remember { mutableStateOf(false) }
     val habitColor = Color(state.habitColor)
+    val hasReminder = state.reminderHour != null
 
     Scaffold(
         topBar = {
@@ -80,6 +89,22 @@ fun DetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        if (hasReminder) {
+                            viewModel.clearReminder(context)
+                        } else {
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute -> viewModel.setReminder(context, hour, minute) },
+                                9, 0, true
+                            ).show()
+                        }
+                    }) {
+                        Icon(
+                            if (hasReminder) Icons.Default.Notifications else Icons.Outlined.Notifications,
+                            contentDescription = if (hasReminder) "Remove reminder" else "Set reminder"
+                        )
+                    }
                     IconButton(onClick = { showEditSheet = true }) {
                         Icon(Icons.Default.Edit, "Edit habit")
                     }
@@ -101,6 +126,46 @@ fun DetailScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
+            // Reminder indicator
+            if (hasReminder) {
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = habitColor.copy(alpha = 0.1f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute -> viewModel.setReminder(context, hour, minute) },
+                                state.reminderHour ?: 9,
+                                state.reminderMinute ?: 0,
+                                true
+                            ).show()
+                        }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Notifications,
+                            contentDescription = null,
+                            tint = habitColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Reminder at %02d:%02d".format(state.reminderHour, state.reminderMinute),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             // Calendar
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -148,6 +213,23 @@ fun DetailScreen(
                 )
             }
 
+            // Heatmap
+            if (state.heatmapDates.isNotEmpty() || state.totalCheckIns > 0) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    HeatmapGrid(
+                        checkedDates = state.heatmapDates,
+                        habitColor = habitColor,
+                        year = LocalDate.now().year,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
             // Encouraging message
             if (!state.isLoading) {
                 Spacer(modifier = Modifier.height(24.dp))
@@ -177,7 +259,7 @@ fun DetailScreen(
             text = { Text("Delete this habit and all history? This cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.deleteHabit { onBack() }
+                    viewModel.deleteHabit(context) { onBack() }
                     showDeleteDialog = false
                 }) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)

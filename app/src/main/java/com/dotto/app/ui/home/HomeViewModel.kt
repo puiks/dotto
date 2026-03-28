@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.dotto.app.data.local.entity.HabitEntity
 import com.dotto.app.data.repository.HabitRepository
+import com.dotto.app.ui.components.MILESTONES
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,8 @@ data class HabitUiModel(
 
 data class HomeUiState(
     val habits: List<HabitUiModel> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val milestoneStreak: Int? = null
 )
 
 class HomeViewModel(
@@ -57,10 +59,20 @@ class HomeViewModel(
 
     fun toggleCheckIn(habitId: Long) {
         viewModelScope.launch {
-            repository.toggleCheckIn(habitId, LocalDate.now())
-            // Manually refresh since check_ins table changes don't trigger habits Flow
+            val checked = repository.toggleCheckIn(habitId, LocalDate.now())
             reloadStats()
+            // Check for milestone after check-in
+            if (checked) {
+                val stats = repository.getStats(habitId)
+                if (stats.currentStreak in MILESTONES) {
+                    _uiState.value = _uiState.value.copy(milestoneStreak = stats.currentStreak)
+                }
+            }
         }
+    }
+
+    fun dismissMilestone() {
+        _uiState.value = _uiState.value.copy(milestoneStreak = null)
     }
 
     fun addHabit(name: String, color: Int) {

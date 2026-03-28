@@ -1,10 +1,11 @@
 package com.dotto.app.ui.detail
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.dotto.app.data.repository.HabitRepository
-import com.dotto.app.data.repository.HabitStats
+import com.dotto.app.notification.ReminderScheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,9 @@ data class DetailUiState(
     val totalCheckIns: Int = 0,
     val currentMonth: YearMonth = YearMonth.now(),
     val checkedDates: Set<LocalDate> = emptySet(),
+    val heatmapDates: Set<LocalDate> = emptySet(),
+    val reminderHour: Int? = null,
+    val reminderMinute: Int? = null,
     val isLoading: Boolean = true
 )
 
@@ -38,6 +42,7 @@ class DetailViewModel(
     init {
         loadHabit()
         observeMonth()
+        loadHeatmap()
     }
 
     private fun loadHabit() {
@@ -50,6 +55,8 @@ class DetailViewModel(
                 currentStreak = stats.currentStreak,
                 longestStreak = stats.longestStreak,
                 totalCheckIns = stats.totalCheckIns,
+                reminderHour = habit.reminderHour,
+                reminderMinute = habit.reminderMinute,
                 isLoading = false
             )
         }
@@ -64,6 +71,14 @@ class DetailViewModel(
                 val dates = checkIns.map { LocalDate.parse(it.date) }.toSet()
                 _uiState.value = _uiState.value.copy(checkedDates = dates)
             }
+        }
+    }
+
+    private fun loadHeatmap() {
+        viewModelScope.launch {
+            val year = LocalDate.now().year
+            val dates = repository.getCheckInDatesForYear(habitId, year)
+            _uiState.value = _uiState.value.copy(heatmapDates = dates)
         }
     }
 
@@ -83,6 +98,23 @@ class DetailViewModel(
                 longestStreak = stats.longestStreak,
                 totalCheckIns = stats.totalCheckIns
             )
+            loadHeatmap()
+        }
+    }
+
+    fun setReminder(context: Context, hour: Int, minute: Int) {
+        viewModelScope.launch {
+            repository.setReminder(habitId, hour, minute)
+            ReminderScheduler.schedule(context, habitId, hour, minute)
+            _uiState.value = _uiState.value.copy(reminderHour = hour, reminderMinute = minute)
+        }
+    }
+
+    fun clearReminder(context: Context) {
+        viewModelScope.launch {
+            repository.clearReminder(habitId)
+            ReminderScheduler.cancel(context, habitId)
+            _uiState.value = _uiState.value.copy(reminderHour = null, reminderMinute = null)
         }
     }
 
@@ -94,8 +126,9 @@ class DetailViewModel(
         }
     }
 
-    fun deleteHabit(onDeleted: () -> Unit) {
+    fun deleteHabit(context: Context, onDeleted: () -> Unit) {
         viewModelScope.launch {
+            ReminderScheduler.cancel(context, habitId)
             repository.deleteHabit(habitId)
             onDeleted()
         }
