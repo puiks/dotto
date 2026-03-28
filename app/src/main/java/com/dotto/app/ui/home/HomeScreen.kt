@@ -76,11 +76,13 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddSheet = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add habit")
+            if (!state.isLoading && state.habits.isNotEmpty()) {
+                FloatingActionButton(
+                    onClick = { showAddSheet = true },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add habit")
+                }
             }
         },
         containerColor = MaterialTheme.colorScheme.background
