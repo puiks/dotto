@@ -4,6 +4,24 @@ All notable changes to Dotto will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.1] - 2026-03-29
+
+### Added
+- Long press habit card to enter edit mode: rename inline, delete button replaces check
+- Smooth horizontal slide navigation transitions (spring curve)
+- Dark mode window background (#121212) to prevent white flash on page transitions
+
+### Fixed
+- App crash on launch: Compose BOM 2024.01.00 → 2024.02.02 (KeyframesSpec.at() NoSuchMethodError)
+- Color picker selection never showing as selected (Color.value.toInt() → Color.toArgb())
+- Edit mode exiting immediately after long press (onFocusChanged initial false trigger)
+- System back press and tap-outside now save and exit edit mode
+- FAB hidden when habit list is empty to avoid duplicate add buttons
+
+### Changed
+- App icon simplified to single dot + checkmark
+- Version bumped to 0.1.1 (versionCode=5)
+
 ## [0.1.0] - 2026-03-29
 
 ### Added
