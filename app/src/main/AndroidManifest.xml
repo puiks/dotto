@@ -2,16 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
-        android:name=".PocoApp"
+        android:name=".DottoApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="Poco"
+        android:label="Dotto"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Poco">
+        android:theme="@style/Theme.Dotto">
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Poco">
+            android:theme="@style/Theme.Dotto">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

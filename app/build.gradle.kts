@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.poco.app"
+    namespace = "com.dotto.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.poco.app"
+        applicationId = "com.dotto.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

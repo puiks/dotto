@@ -1,7 +1,7 @@
-# Poco - Development Guidelines
+# Dotto - Development Guidelines
 
 ## Project Overview
-Poco is a minimalist daily habit tracker Android app. "A poco a poco" — little by little.
+Dotto is a minimalist daily habit tracker Android app. Every day, a new dot.
 
 ## Tech Stack
 - Kotlin + Jetpack Compose + Material 3
