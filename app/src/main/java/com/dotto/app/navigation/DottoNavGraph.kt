@@ -1,5 +1,11 @@
 package com.dotto.app.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -20,11 +26,35 @@ object Routes {
     fun detail(habitId: Long) = "detail/$habitId"
 }
 
+private val slideSpec = spring<IntOffset>(
+    dampingRatio = Spring.DampingRatioNoBouncy,
+    stiffness = Spring.StiffnessMediumLow
+)
+
 @Composable
 fun DottoNavGraph(app: DottoApp) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Routes.HOME) {
+    NavHost(
+        navController = navController,
+        startDestination = Routes.HOME,
+        enterTransition = {
+            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, slideSpec) +
+                    fadeIn(spring(stiffness = Spring.StiffnessMedium))
+        },
+        exitTransition = {
+            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, slideSpec) +
+                    fadeOut(spring(stiffness = Spring.StiffnessMedium))
+        },
+        popEnterTransition = {
+            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, slideSpec) +
+                    fadeIn(spring(stiffness = Spring.StiffnessMedium))
+        },
+        popExitTransition = {
+            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, slideSpec) +
+                    fadeOut(spring(stiffness = Spring.StiffnessMedium))
+        }
+    ) {
         composable(Routes.HOME) {
             val viewModel: HomeViewModel = viewModel(
                 factory = HomeViewModel.Factory(app.habitRepository)
