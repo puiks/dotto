@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dotto.app.ui.home.HabitUiModel
+import com.dotto.app.ui.theme.UncheckedColor
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -57,7 +58,7 @@ fun HabitCard(
     )
 
     val checkBgColor by animateColorAsState(
-        targetValue = if (habit.isCheckedToday) habitColor else Color(0xFFE8E8E8),
+        targetValue = if (habit.isCheckedToday) habitColor else UncheckedColor,
         label = "checkBgColor"
     )
 

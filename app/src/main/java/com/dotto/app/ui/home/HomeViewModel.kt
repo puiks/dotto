@@ -38,7 +38,18 @@ class HomeViewModel(
     private fun observeHabits() {
         viewModelScope.launch {
             repository.observeAllHabits().collect { habits ->
-                val models = habits.map { it.toUiModel() }
+                val today = LocalDate.now()
+                val models = habits.map { habit ->
+                    val isChecked = repository.isCheckedIn(habit.id, today)
+                    val stats = repository.getStats(habit.id)
+                    HabitUiModel(
+                        id = habit.id,
+                        name = habit.name,
+                        color = habit.color,
+                        isCheckedToday = isChecked,
+                        currentStreak = stats.currentStreak
+                    )
+                }
                 _uiState.value = HomeUiState(habits = models, isLoading = false)
             }
         }
@@ -47,7 +58,8 @@ class HomeViewModel(
     fun toggleCheckIn(habitId: Long) {
         viewModelScope.launch {
             repository.toggleCheckIn(habitId, LocalDate.now())
-            refreshHabits()
+            // Manually refresh since check_ins table changes don't trigger habits Flow
+            reloadStats()
         }
     }
 
@@ -64,24 +76,14 @@ class HomeViewModel(
         }
     }
 
-    private suspend fun refreshHabits() {
-        val currentHabits = _uiState.value.habits
-        val updated = currentHabits.map { habit ->
-            val isChecked = repository.isCheckedIn(habit.id, LocalDate.now())
-            val streak = repository.calculateCurrentStreak(habit.id)
-            habit.copy(isCheckedToday = isChecked, currentStreak = streak)
+    private suspend fun reloadStats() {
+        val today = LocalDate.now()
+        val updated = _uiState.value.habits.map { habit ->
+            val isChecked = repository.isCheckedIn(habit.id, today)
+            val stats = repository.getStats(habit.id)
+            habit.copy(isCheckedToday = isChecked, currentStreak = stats.currentStreak)
         }
         _uiState.value = _uiState.value.copy(habits = updated)
-    }
-
-    private suspend fun HabitEntity.toUiModel(): HabitUiModel {
-        return HabitUiModel(
-            id = id,
-            name = name,
-            color = color,
-            isCheckedToday = repository.isCheckedIn(id, LocalDate.now()),
-            currentStreak = repository.calculateCurrentStreak(id)
-        )
     }
 
     class Factory(private val repository: HabitRepository) : ViewModelProvider.Factory {

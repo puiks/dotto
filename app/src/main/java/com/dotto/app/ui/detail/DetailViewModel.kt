@@ -3,11 +3,13 @@ package com.dotto.app.ui.detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.dotto.app.data.local.entity.CheckInEntity
 import com.dotto.app.data.repository.HabitRepository
+import com.dotto.app.data.repository.HabitStats
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
@@ -31,6 +33,8 @@ class DetailViewModel(
     private val _uiState = MutableStateFlow(DetailUiState())
     val uiState: StateFlow<DetailUiState> = _uiState.asStateFlow()
 
+    private val _currentMonth = MutableStateFlow(YearMonth.now())
+
     init {
         loadHabit()
         observeMonth()
@@ -39,55 +43,45 @@ class DetailViewModel(
     private fun loadHabit() {
         viewModelScope.launch {
             val habit = repository.getHabitById(habitId) ?: return@launch
-            val streak = repository.calculateCurrentStreak(habitId)
-            val longest = repository.calculateLongestStreak(habitId)
-            val total = repository.totalCheckIns(habitId)
+            val stats = repository.getStats(habitId)
             _uiState.value = _uiState.value.copy(
                 habitName = habit.name,
                 habitColor = habit.color,
-                currentStreak = streak,
-                longestStreak = longest,
-                totalCheckIns = total,
+                currentStreak = stats.currentStreak,
+                longestStreak = stats.longestStreak,
+                totalCheckIns = stats.totalCheckIns,
                 isLoading = false
             )
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeMonth() {
         viewModelScope.launch {
-            val month = _uiState.value.currentMonth
-            repository.observeCheckInsForMonth(habitId, month.year, month.monthValue)
-                .collect { checkIns ->
-                    val dates = checkIns.map { LocalDate.parse(it.date) }.toSet()
-                    _uiState.value = _uiState.value.copy(checkedDates = dates)
-                }
+            _currentMonth.flatMapLatest { month ->
+                repository.observeCheckInsForMonth(habitId, month.year, month.monthValue)
+            }.collect { checkIns ->
+                val dates = checkIns.map { LocalDate.parse(it.date) }.toSet()
+                _uiState.value = _uiState.value.copy(checkedDates = dates)
+            }
         }
     }
 
     fun navigateMonth(offset: Int) {
-        val newMonth = _uiState.value.currentMonth.plusMonths(offset.toLong())
+        val newMonth = _currentMonth.value.plusMonths(offset.toLong())
+        _currentMonth.value = newMonth
         _uiState.value = _uiState.value.copy(currentMonth = newMonth)
-        viewModelScope.launch {
-            repository.observeCheckInsForMonth(habitId, newMonth.year, newMonth.monthValue)
-                .collect { checkIns ->
-                    val dates = checkIns.map { LocalDate.parse(it.date) }.toSet()
-                    _uiState.value = _uiState.value.copy(checkedDates = dates)
-                }
-        }
     }
 
     fun toggleDate(date: LocalDate) {
-        if (date.isAfter(LocalDate.now())) return // Can't check future dates
+        if (date.isAfter(LocalDate.now())) return
         viewModelScope.launch {
             repository.toggleCheckIn(habitId, date)
-            // Refresh stats
-            val streak = repository.calculateCurrentStreak(habitId)
-            val longest = repository.calculateLongestStreak(habitId)
-            val total = repository.totalCheckIns(habitId)
+            val stats = repository.getStats(habitId)
             _uiState.value = _uiState.value.copy(
-                currentStreak = streak,
-                longestStreak = longest,
-                totalCheckIns = total
+                currentStreak = stats.currentStreak,
+                longestStreak = stats.longestStreak,
+                totalCheckIns = stats.totalCheckIns
             )
         }
     }

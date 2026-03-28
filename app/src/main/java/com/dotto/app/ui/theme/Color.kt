@@ -10,6 +10,11 @@ val DottoSurface = Color(0xFFFFFFFF)
 val DottoOnSurface = Color(0xFF1C1B1F)
 val DottoOnSurfaceVariant = Color(0xFF6B6B6B)
 
+// Shared UI constants
+val UncheckedColor = Color(0xFFE8E8E8)
+const val TodayHighlightAlpha = 0.1f
+const val FutureDateAlpha = 0.3f
+
 // Habit color palette for user selection
 val HabitColors = listOf(
     Color(0xFF5B6ABF), // Indigo

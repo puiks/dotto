@@ -192,6 +192,7 @@ fun DetailScreen(
                 viewModel.updateHabit(name, color)
                 showEditSheet = false
             },
+            isEditMode = true,
             initialName = state.habitName,
             initialColor = state.habitColor
         )

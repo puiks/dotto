@@ -8,6 +8,12 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+data class HabitStats(
+    val currentStreak: Int,
+    val longestStreak: Int,
+    val totalCheckIns: Int
+)
+
 class HabitRepository(
     private val habitDao: HabitDao,
     private val checkInDao: CheckInDao
@@ -19,7 +25,8 @@ class HabitRepository(
     suspend fun getHabitById(id: Long): HabitEntity? = habitDao.getById(id)
 
     suspend fun addHabit(name: String, color: Int): Long {
-        return habitDao.insert(HabitEntity(name = name, color = color))
+        require(name.isNotBlank()) { "Habit name cannot be empty" }
+        return habitDao.insert(HabitEntity(name = name.trim(), color = color))
     }
 
     suspend fun updateHabit(habit: HabitEntity) = habitDao.update(habit)
@@ -53,50 +60,44 @@ class HabitRepository(
         )
     }
 
-    suspend fun calculateCurrentStreak(habitId: Long): Int {
-        val dates = checkInDao.getAllDatesByHabit(habitId)
-            .map { LocalDate.parse(it, dateFormatter) }
-            .toSet()
-
-        var streak = 0
-        var current = LocalDate.now()
-
-        // If today is not checked, start from yesterday
-        if (current !in dates) {
-            current = current.minusDays(1)
-        }
-
-        while (current in dates) {
-            streak++
-            current = current.minusDays(1)
-        }
-
-        return streak
-    }
-
-    suspend fun calculateLongestStreak(habitId: Long): Int {
+    /**
+     * Calculates all stats in a single pass over the check-in dates.
+     * One DB query, one iteration — no redundant work.
+     */
+    suspend fun getStats(habitId: Long): HabitStats {
         val dates = checkInDao.getAllDatesByHabit(habitId)
             .map { LocalDate.parse(it, dateFormatter) }
             .sorted()
 
-        if (dates.isEmpty()) return 0
+        if (dates.isEmpty()) return HabitStats(0, 0, 0)
 
-        var longest = 1
-        var current = 1
+        val dateSet = dates.toSet()
+        val today = LocalDate.now()
 
+        // Current streak: walk backwards from today (or yesterday if today not checked)
+        var currentStreak = 0
+        var cursor = if (today in dateSet) today else today.minusDays(1)
+        while (cursor in dateSet) {
+            currentStreak++
+            cursor = cursor.minusDays(1)
+        }
+
+        // Longest streak: single forward pass
+        var longestStreak = 1
+        var runLength = 1
         for (i in 1 until dates.size) {
             if (dates[i] == dates[i - 1].plusDays(1)) {
-                current++
-                longest = maxOf(longest, current)
+                runLength++
+                longestStreak = maxOf(longestStreak, runLength)
             } else {
-                current = 1
+                runLength = 1
             }
         }
 
-        return longest
-    }
-
-    suspend fun totalCheckIns(habitId: Long): Int {
-        return checkInDao.getAllDatesByHabit(habitId).size
+        return HabitStats(
+            currentStreak = currentStreak,
+            longestStreak = longestStreak,
+            totalCheckIns = dates.size
+        )
     }
 }

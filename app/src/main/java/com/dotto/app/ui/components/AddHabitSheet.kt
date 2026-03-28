@@ -30,6 +30,7 @@ import com.dotto.app.ui.theme.HabitColors
 fun AddHabitSheet(
     onDismiss: () -> Unit,
     onSave: (name: String, color: Int) -> Unit,
+    isEditMode: Boolean = false,
     initialName: String = "",
     initialColor: Int = HabitColors.first().value.toInt()
 ) {
@@ -53,7 +54,7 @@ fun AddHabitSheet(
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = if (initialName.isEmpty()) "New habit" else "Edit habit",
+                text = if (isEditMode) "Edit habit" else "New habit",
                 style = MaterialTheme.typography.headlineMedium
             )
 

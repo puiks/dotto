@@ -22,6 +22,7 @@ Dotto is a minimalist daily habit tracker Android app. Every day, a new dot.
   - Navigation wiring
   - Theme/Color/Typography definitions
   - Entity data class definitions
+- **Shared test fakes live in `testutil/FakeDaos.kt`.** Never duplicate fake DAO implementations across test files.
 - Run `./gradlew test` after each logical unit of change.
 
 ## Module & Layer Structure
@@ -46,6 +47,20 @@ Dotto is a minimalist daily habit tracker Android app. Every day, a new dot.
 - Use `LocalDate` (java.time) for date handling, never raw strings in business logic
 - Repository methods should return `Flow<T>` for observable data
 - ViewModel exposes `StateFlow<UiState>` to the UI
+
+## Patterns & Anti-Patterns (Learned from Code Review)
+
+### DO:
+- **Batch related DB queries into one method.** Use `getStats()` instead of calling `calculateCurrentStreak()`, `calculateLongestStreak()`, `totalCheckIns()` separately. One DB read, one pass.
+- **Use `flatMapLatest` for reactive state-driven subscriptions.** When a StateFlow drives which data to observe (e.g., current month), use `flatMapLatest` to auto-cancel the previous subscription. Never launch a new `collect` coroutine on each state change.
+- **Use explicit mode parameters for dual-purpose UI components.** If a composable serves both "create" and "edit" modes, pass an explicit `isEditMode: Boolean` — don't infer mode from data values.
+- **Centralize magic values in `theme/Color.kt`.** All shared color constants, alpha values, and UI constants belong there.
+- **Validate inputs at the Repository boundary.** Use `require()` for preconditions like non-blank names.
+
+### DON'T:
+- **Don't create redundant refresh paths.** If a Flow already observes data changes, don't add a manual `refreshXxx()` method that reads stale state and overwrites. One source of truth.
+- **Don't hide suspend/DB calls in extension functions that look pure.** A function named `toUiModel()` should not make database calls. Make the data-fetching explicit.
+- **Don't launch unbounded `collect` coroutines.** Every `launch { flow.collect {} }` lives forever in its scope. If you call it multiple times (e.g., on month change), you get parallel collectors fighting over state.
 
 ## Build & Verify
 ```bash

@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.dotto.app.ui.theme.FutureDateAlpha
+import com.dotto.app.ui.theme.TodayHighlightAlpha
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -116,7 +118,7 @@ fun CalendarGrid(
                                     if (isChecked) {
                                         Modifier.background(habitColor)
                                     } else if (isToday) {
-                                        Modifier.background(habitColor.copy(alpha = 0.1f))
+                                        Modifier.background(habitColor.copy(alpha = TodayHighlightAlpha))
                                     } else {
                                         Modifier
                                     }
@@ -135,7 +137,7 @@ fun CalendarGrid(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = when {
                                     isChecked -> Color.White
-                                    isFuture -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                    isFuture -> MaterialTheme.colorScheme.onSurface.copy(alpha = FutureDateAlpha)
                                     else -> MaterialTheme.colorScheme.onSurface
                                 },
                                 fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
