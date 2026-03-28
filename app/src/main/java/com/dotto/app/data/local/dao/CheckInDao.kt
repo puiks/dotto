@@ -21,6 +21,9 @@ interface CheckInDao {
     @Query("SELECT date FROM check_ins WHERE habitId = :habitId ORDER BY date DESC")
     suspend fun getAllDatesByHabit(habitId: Long): List<String>
 
+    @Query("SELECT date FROM check_ins WHERE habitId = :habitId AND date BETWEEN :startDate AND :endDate")
+    suspend fun getDatesByHabitInRange(habitId: Long, startDate: String, endDate: String): List<String>
+
     @Insert
     suspend fun insert(checkIn: CheckInEntity)
 

@@ -4,8 +4,45 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Simple checkmark icon -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M43,63.5L35,55.5L32.5,58L43,68.5L75.5,36L73,33.5Z" />
+
+    <!-- Row 1: checked days -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.85"
+        android:pathData="M34,34m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.85"
+        android:pathData="M54,34m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.85"
+        android:pathData="M74,34m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0"/>
+
+    <!-- Row 2: two checked + today with checkmark -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.85"
+        android:pathData="M34,54m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.85"
+        android:pathData="M54,54m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0"/>
+    <!-- Today's dot (larger) -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M74,54m-8.5,0a8.5,8.5 0,1 1,17 0a8.5,8.5 0,1 1,-17 0"/>
+    <!-- Checkmark inside today's dot -->
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#5B6ABF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M69,54L72.5,57.5L79,51"/>
+
+    <!-- Row 3: future days (outline) -->
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.3"
+        android:pathData="M34,74m-6.5,0a6.5,6.5 0,1 1,13 0a6.5,6.5 0,1 1,-13 0"/>
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.3"
+        android:pathData="M54,74m-6.5,0a6.5,6.5 0,1 1,13 0a6.5,6.5 0,1 1,-13 0"/>
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.3"
+        android:pathData="M74,74m-6.5,0a6.5,6.5 0,1 1,13 0a6.5,6.5 0,1 1,-13 0"/>
 </vector>

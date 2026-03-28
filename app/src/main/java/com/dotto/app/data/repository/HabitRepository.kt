@@ -22,6 +22,8 @@ class HabitRepository(
 
     fun observeAllHabits(): Flow<List<HabitEntity>> = habitDao.observeAll()
 
+    suspend fun getHabitsSnapshot(): List<HabitEntity> = habitDao.getAll()
+
     suspend fun getHabitById(id: Long): HabitEntity? = habitDao.getById(id)
 
     suspend fun addHabit(name: String, color: Int): Long {
@@ -30,6 +32,18 @@ class HabitRepository(
     }
 
     suspend fun updateHabit(habit: HabitEntity) = habitDao.update(habit)
+
+    suspend fun setReminder(habitId: Long, hour: Int, minute: Int) {
+        val habit = habitDao.getById(habitId) ?: return
+        habitDao.update(habit.copy(reminderHour = hour, reminderMinute = minute))
+    }
+
+    suspend fun clearReminder(habitId: Long) {
+        val habit = habitDao.getById(habitId) ?: return
+        habitDao.update(habit.copy(reminderHour = null, reminderMinute = null))
+    }
+
+    suspend fun getHabitsWithReminders(): List<HabitEntity> = habitDao.getHabitsWithReminders()
 
     suspend fun deleteHabit(id: Long) = habitDao.deleteById(id)
 
@@ -48,6 +62,16 @@ class HabitRepository(
     suspend fun isCheckedIn(habitId: Long, date: LocalDate): Boolean {
         val dateStr = date.format(dateFormatter)
         return checkInDao.get(habitId, dateStr) != null
+    }
+
+    suspend fun getCheckInDatesForYear(habitId: Long, year: Int): Set<LocalDate> {
+        val start = LocalDate.of(year, 1, 1)
+        val end = LocalDate.of(year, 12, 31)
+        return checkInDao.getDatesByHabitInRange(
+            habitId,
+            start.format(dateFormatter),
+            end.format(dateFormatter)
+        ).map { LocalDate.parse(it, dateFormatter) }.toSet()
     }
 
     fun observeCheckInsForMonth(habitId: Long, year: Int, month: Int): Flow<List<CheckInEntity>> {

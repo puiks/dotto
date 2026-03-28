@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dotto.app.ui.components.AddHabitSheet
+import com.dotto.app.ui.components.MilestoneOverlay
 import com.dotto.app.ui.home.components.EmptyState
 import com.dotto.app.ui.home.components.HabitCard
 import java.time.LocalDate
@@ -124,6 +125,14 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    // Milestone celebration
+    state.milestoneStreak?.let { days ->
+        MilestoneOverlay(
+            days = days,
+            onDismiss = { viewModel.dismissMilestone() }
+        )
     }
 
     if (showAddSheet) {

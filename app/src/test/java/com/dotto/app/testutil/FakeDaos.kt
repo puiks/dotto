@@ -36,6 +36,11 @@ class FakeHabitDao : HabitDao {
         habits.removeAll { it.id == id }
         flow.value = habits.toList()
     }
+
+    override suspend fun getAll(): List<HabitEntity> = habits.toList()
+
+    override suspend fun getHabitsWithReminders(): List<HabitEntity> =
+        habits.filter { it.reminderHour != null && it.reminderMinute != null }
 }
 
 class FakeCheckInDao : CheckInDao {
@@ -61,6 +66,9 @@ class FakeCheckInDao : CheckInDao {
 
     override suspend fun getAllDatesByHabit(habitId: Long): List<String> =
         checkIns.filter { it.habitId == habitId }.map { it.date }.sortedDescending()
+
+    override suspend fun getDatesByHabitInRange(habitId: Long, startDate: String, endDate: String): List<String> =
+        checkIns.filter { it.habitId == habitId && it.date >= startDate && it.date <= endDate }.map { it.date }
 
     override suspend fun insert(checkIn: CheckInEntity) {
         checkIns.add(checkIn)

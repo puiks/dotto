@@ -24,4 +24,10 @@ interface HabitDao {
 
     @Query("DELETE FROM habits WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("SELECT * FROM habits ORDER BY sortOrder ASC, createdAt ASC")
+    suspend fun getAll(): List<HabitEntity>
+
+    @Query("SELECT * FROM habits WHERE reminderHour IS NOT NULL AND reminderMinute IS NOT NULL")
+    suspend fun getHabitsWithReminders(): List<HabitEntity>
 }
