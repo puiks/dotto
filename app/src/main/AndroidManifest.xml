@@ -3,7 +3,7 @@
 
     <application
         android:name=".DottoApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="Dotto"
         android:supportsRtl="true"

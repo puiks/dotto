@@ -4,6 +4,29 @@ All notable changes to Dotto will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.0.3] - 2026-03-29
+
+### Added
+- Dark mode support (follows system theme)
+- Loading indicator on home screen
+- Accessibility: content descriptions for all interactive elements (check buttons, calendar dates, color picker)
+- Calendar date taps now have haptic feedback
+- Detail screen shows encouraging messages for all streak states (fresh start / personal best / keep going)
+
+### Fixed
+- Check button touch target no longer shrinks below 48dp during scale animation
+- Long habit names now truncate with ellipsis instead of breaking layout
+- Color picker selection effect made more prominent (larger scale, border, shadow, checkmark)
+- Future date contrast improved (alpha 0.3 → 0.5) for better readability
+- Whitespace-only habit names no longer pass validation
+- FAB now always visible (was hidden when habit list was empty)
+- Delete dialog text simplified for small screens
+- Removed hardcoded keystore fallback passwords from build config
+
+### Changed
+- Enabled R8 code shrinking and resource optimization for release builds
+- Disabled automatic backup (android:allowBackup=false) for privacy
+
 ## [0.0.2] - 2026-03-29
 
 ### Fixed

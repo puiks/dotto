@@ -90,11 +90,12 @@ fun AddHabitSheet(
 
             Button(
                 onClick = {
-                    if (name.isNotBlank()) {
-                        onSave(name.trim(), selectedColor)
+                    val trimmed = name.trim()
+                    if (trimmed.isNotEmpty()) {
+                        onSave(trimmed, selectedColor)
                     }
                 },
-                enabled = name.isNotBlank(),
+                enabled = name.trim().isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)

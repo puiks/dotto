@@ -31,7 +31,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dotto.app.ui.home.HabitUiModel
 import com.dotto.app.ui.theme.UncheckedColor
@@ -62,9 +65,18 @@ fun HabitCard(
         label = "checkBgColor"
     )
 
+    val streakText = if (habit.currentStreak > 0) {
+        "${habit.currentStreak} day streak"
+    } else {
+        "Today is a fresh start"
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .semantics {
+                contentDescription = "${habit.name}, $streakText"
+            }
             .combinedClickable(
                 onClick = { onClick() },
                 onLongClick = {
@@ -100,7 +112,9 @@ fun HabitCard(
                 Column(modifier = Modifier.padding(start = 12.dp)) {
                     Text(
                         text = habit.name,
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     if (habit.currentStreak > 0) {
                         Text(
@@ -118,26 +132,36 @@ fun HabitCard(
                 }
             }
 
-            // Right: check button
+            // Right: check button — touch target stays 48dp, only inner circle scales
+            val checkLabel = if (habit.isCheckedToday) "Uncheck ${habit.name}" else "Check in ${habit.name}"
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .scale(checkScale)
                     .clip(CircleShape)
-                    .background(checkBgColor)
                     .clickable {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onToggle()
-                    },
+                    }
+                    .semantics { contentDescription = checkLabel },
                 contentAlignment = Alignment.Center
             ) {
-                if (habit.isCheckedToday) {
-                    Text(
-                        text = "✓",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                // Inner visual circle that scales
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .scale(checkScale)
+                        .clip(CircleShape)
+                        .background(checkBgColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (habit.isCheckedToday) {
+                        Text(
+                            text = "✓",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
             }
         }

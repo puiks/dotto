@@ -76,15 +76,15 @@ fun DetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Go back")
                     }
                 },
                 actions = {
                     IconButton(onClick = { showEditSheet = true }) {
-                        Icon(Icons.Default.Edit, "Edit")
+                        Icon(Icons.Default.Edit, "Edit habit")
                     }
                     IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(Icons.Default.Delete, "Delete")
+                        Icon(Icons.Default.Delete, "Delete habit")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -149,10 +149,17 @@ fun DetailScreen(
             }
 
             // Encouraging message
-            if (state.currentStreak == 0 && !state.isLoading) {
+            if (!state.isLoading) {
                 Spacer(modifier = Modifier.height(24.dp))
+                val message = if (state.currentStreak == 0) {
+                    "Today is a fresh start"
+                } else if (state.currentStreak >= state.longestStreak && state.currentStreak > 1) {
+                    "New personal best! Keep going"
+                } else {
+                    "${state.currentStreak} day streak, keep it up!"
+                }
                 Text(
-                    text = "Today is a fresh start ✨",
+                    text = message,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
@@ -167,7 +174,7 @@ fun DetailScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete habit?") },
-            text = { Text("This will remove \"${state.habitName}\" and all its check-in history. This cannot be undone.") },
+            text = { Text("Delete this habit and all history? This cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteHabit { onBack() }

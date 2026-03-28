@@ -2,7 +2,7 @@ package com.dotto.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// App palette - soft, calming colors
+// Light palette - soft, calming colors
 val DottoBackground = Color(0xFFFAFAFA)
 val DottoPrimary = Color(0xFF5B6ABF)
 val DottoOnPrimary = Color(0xFFFFFFFF)
@@ -10,10 +10,18 @@ val DottoSurface = Color(0xFFFFFFFF)
 val DottoOnSurface = Color(0xFF1C1B1F)
 val DottoOnSurfaceVariant = Color(0xFF6B6B6B)
 
+// Dark palette
+val DottoDarkBackground = Color(0xFF121212)
+val DottoDarkPrimary = Color(0xFF9DA5E0)
+val DottoDarkOnPrimary = Color(0xFF1C1B1F)
+val DottoDarkSurface = Color(0xFF1E1E1E)
+val DottoDarkOnSurface = Color(0xFFE6E1E5)
+val DottoDarkOnSurfaceVariant = Color(0xFFA0A0A0)
+
 // Shared UI constants
 val UncheckedColor = Color(0xFFE8E8E8)
 const val TodayHighlightAlpha = 0.1f
-const val FutureDateAlpha = 0.3f
+const val FutureDateAlpha = 0.5f
 
 // Habit color palette for user selection
 val HabitColors = listOf(
