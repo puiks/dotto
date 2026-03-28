@@ -108,14 +108,26 @@ widget/             — Glance widget
 KEYSTORE_PASSWORD=xxx KEY_ALIAS=xxx KEY_PASSWORD=xxx ./gradlew assembleRelease
 ```
 
-### Versioning
+### Versioning — Three-Way Consistency Rule
+**Git tag, `build.gradle.kts` version, and `CHANGELOG.md` MUST always be in sync.**
+
 - Semantic versioning: `MAJOR.MINOR.PATCH` (currently 0.x.y)
 - `versionCode` increments with every release (integer, monotonic)
-- `versionName` matches the git tag (e.g., `v0.0.3` → `"0.0.3"`)
+- `versionName` matches the git tag without the `v` prefix (e.g., tag `v0.1.0` → `versionName = "0.1.0"`)
+- `CHANGELOG.md` must have a `## [X.Y.Z]` section matching the version being released
+
+**Pre-tag checklist** (all three must be true before tagging):
+1. `app/build.gradle.kts` → `versionName` = target version, `versionCode` = previous + 1
+2. `CHANGELOG.md` → `## [X.Y.Z] - YYYY-MM-DD` section exists with changes listed
+3. Git tag = `vX.Y.Z` matching the above
+
+If any of the three is out of sync, **stop and fix before proceeding.**
 
 ### Release Process
-1. Update `versionCode` and `versionName` in `app/build.gradle.kts`
-2. Update `CHANGELOG.md` with new version section
-3. Commit, tag `vX.Y.Z`, push — GitHub Actions builds and publishes the release
-4. Release APK is signed with the project keystore via GitHub Secrets
-5. R8 minification and resource shrinking are enabled for release builds
+1. Decide the new version number `X.Y.Z`
+2. Update `versionCode` (+1) and `versionName` (`"X.Y.Z"`) in `app/build.gradle.kts`
+3. Add `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md`
+4. Commit these changes (e.g., `Prepare release vX.Y.Z`)
+5. Tag `vX.Y.Z` on the release commit, push tag — GitHub Actions builds and publishes
+6. Release APK is signed with the project keystore via GitHub Secrets
+7. R8 minification and resource shrinking are enabled for release builds

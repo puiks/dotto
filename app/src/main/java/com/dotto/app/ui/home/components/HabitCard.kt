@@ -69,6 +69,7 @@ fun HabitCard(
     val focusManager = LocalFocusManager.current
     val habitColor = Color(habit.color)
     var isEditing by remember { mutableStateOf(false) }
+    var hasFocused by remember { mutableStateOf(false) }
     var editText by remember(habit.name) {
         mutableStateOf(TextFieldValue(habit.name, TextRange(habit.name.length)))
     }
@@ -100,6 +101,7 @@ fun HabitCard(
             onRename(trimmed)
         }
         isEditing = false
+        hasFocused = false
         focusManager.clearFocus()
     }
 
@@ -168,8 +170,10 @@ fun HabitCard(
                                 .fillMaxWidth()
                                 .focusRequester(focusRequester)
                                 .onFocusChanged { state ->
-                                    // Lost focus (tapped outside) → save and exit
-                                    if (!state.isFocused && isEditing) {
+                                    if (state.isFocused) {
+                                        hasFocused = true
+                                    } else if (hasFocused && isEditing) {
+                                        // Lost focus after having been focused → save and exit
                                         commitAndExit()
                                     }
                                 },
