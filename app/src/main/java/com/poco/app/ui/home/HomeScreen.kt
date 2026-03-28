@@ -1,8 +1,11 @@
 package com.poco.app.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,12 +15,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -43,6 +48,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
+    var habitToDelete by remember { mutableStateOf<HabitUiModel?>(null) }
 
     val today = remember {
         LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
@@ -80,7 +86,7 @@ fun HomeScreen(
     ) { padding ->
         AnimatedVisibility(
             visible = !state.isLoading,
-            enter = fadeIn(),
+            enter = fadeIn(animationSpec = tween(300)),
             exit = fadeOut()
         ) {
             if (state.habits.isEmpty()) {
@@ -100,7 +106,8 @@ fun HomeScreen(
                         HabitCard(
                             habit = habit,
                             onToggle = { viewModel.toggleCheckIn(habit.id) },
-                            onClick = { onHabitClick(habit.id) }
+                            onClick = { onHabitClick(habit.id) },
+                            onLongClick = { habitToDelete = habit }
                         )
                     }
                 }
@@ -114,6 +121,28 @@ fun HomeScreen(
             onSave = { name, color ->
                 viewModel.addHabit(name, color)
                 showAddSheet = false
+            }
+        )
+    }
+
+    // Delete confirmation dialog (triggered by long press)
+    habitToDelete?.let { habit ->
+        AlertDialog(
+            onDismissRequest = { habitToDelete = null },
+            title = { Text("Delete habit?") },
+            text = { Text("Remove \"${habit.name}\" and all its history?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteHabit(habit.id)
+                    habitToDelete = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { habitToDelete = null }) {
+                    Text("Cancel")
+                }
             }
         )
     }
