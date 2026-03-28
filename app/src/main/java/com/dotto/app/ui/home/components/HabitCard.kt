@@ -1,5 +1,6 @@
 package com.dotto.app.ui.home.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -37,9 +38,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -63,6 +66,7 @@ fun HabitCard(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
+    val focusManager = LocalFocusManager.current
     val habitColor = Color(habit.color)
     var isEditing by remember { mutableStateOf(false) }
     var editText by remember(habit.name) {
@@ -90,12 +94,18 @@ fun HabitCard(
         "Today is a fresh start"
     }
 
-    fun commitRename() {
+    fun commitAndExit() {
         val trimmed = editText.text.trim()
         if (trimmed.isNotEmpty() && trimmed != habit.name) {
             onRename(trimmed)
         }
         isEditing = false
+        focusManager.clearFocus()
+    }
+
+    // Intercept system back to save and exit edit mode
+    BackHandler(enabled = isEditing) {
+        commitAndExit()
     }
 
     LaunchedEffect(isEditing) {
@@ -113,7 +123,7 @@ fun HabitCard(
             .combinedClickable(
                 onClick = {
                     if (isEditing) {
-                        commitRename()
+                        commitAndExit()
                     } else {
                         onClick()
                     }
@@ -156,14 +166,20 @@ fun HabitCard(
                             onValueChange = { editText = it },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .focusRequester(focusRequester),
+                                .focusRequester(focusRequester)
+                                .onFocusChanged { state ->
+                                    // Lost focus (tapped outside) → save and exit
+                                    if (!state.isFocused && isEditing) {
+                                        commitAndExit()
+                                    }
+                                },
                             textStyle = MaterialTheme.typography.titleMedium.copy(
                                 color = MaterialTheme.colorScheme.onSurface
                             ),
                             singleLine = true,
                             cursorBrush = SolidColor(habitColor),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = { commitRename() })
+                            keyboardActions = KeyboardActions(onDone = { commitAndExit() })
                         )
                     } else {
                         Text(
