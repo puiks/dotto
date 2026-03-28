@@ -27,8 +27,8 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
-      - name: Build release APK
-        run: ./gradlew assembleRelease
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
 
       - name: Extract version from tag
         id: version
@@ -47,12 +47,12 @@ jobs:
 
       - name: Rename APK with version
         run: |
-          mv app/build/outputs/apk/release/app-release-unsigned.apk \
-             app/build/outputs/apk/release/dotto-${{ steps.version.outputs.VERSION }}.apk
+          mv app/build/outputs/apk/debug/app-debug.apk \
+             app/build/outputs/apk/debug/dotto-${{ steps.version.outputs.VERSION }}.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: Dotto v${{ steps.version.outputs.VERSION }}
           body: ${{ steps.changelog.outputs.NOTES }}
-          files: app/build/outputs/apk/release/dotto-${{ steps.version.outputs.VERSION }}.apk
+          files: app/build/outputs/apk/debug/dotto-${{ steps.version.outputs.VERSION }}.apk
