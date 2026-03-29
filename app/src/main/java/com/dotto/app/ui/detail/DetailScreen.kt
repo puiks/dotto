@@ -24,6 +24,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,11 +34,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,8 +51,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dotto.app.ui.components.AddHabitSheet
@@ -63,8 +71,10 @@ fun DetailScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showEditSheet by remember { mutableStateOf(false) }
+    var commentEditDate by remember { mutableStateOf<LocalDate?>(null) }
     val habitColor = Color(state.habitColor)
     val hasReminder = state.reminderHour != null
 
@@ -175,8 +185,10 @@ fun DetailScreen(
                 CalendarGrid(
                     yearMonth = state.currentMonth,
                     checkedDates = state.checkedDates,
+                    commentsByDate = state.commentsByDate,
                     habitColor = habitColor,
                     onDateClick = { viewModel.toggleDate(it) },
+                    onDateLongClick = { commentEditDate = it },
                     onPreviousMonth = { viewModel.navigateMonth(-1) },
                     onNextMonth = { viewModel.navigateMonth(1) },
                     modifier = Modifier.padding(16.dp)
@@ -271,6 +283,64 @@ fun DetailScreen(
                 }
             }
         )
+    }
+
+    // Comment edit sheet
+    commentEditDate?.let { date ->
+        val existingComment = state.commentsByDate[date] ?: ""
+        var commentText by remember(date) { mutableStateOf(existingComment) }
+
+        ModalBottomSheet(
+            onDismissRequest = {
+                viewModel.updateComment(date, commentText)
+                commentEditDate = null
+            },
+            sheetState = rememberModalBottomSheetState()
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
+                Text(
+                    text = "${date.monthValue}/${date.dayOfMonth} Note",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                BasicTextField(
+                    value = commentText,
+                    onValueChange = { if (it.length <= 50) commentText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    singleLine = true,
+                    cursorBrush = SolidColor(habitColor),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        viewModel.updateComment(date, commentText)
+                        focusManager.clearFocus()
+                        commentEditDate = null
+                    }),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (commentText.isEmpty()) {
+                                Text(
+                                    text = "Add a note...",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+                Text(
+                    text = "${commentText.length}/50",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
     }
 
     // Edit sheet

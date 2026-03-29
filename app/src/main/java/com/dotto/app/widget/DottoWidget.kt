@@ -2,16 +2,19 @@ package com.dotto.app.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import android.graphics.Color as AndroidColor
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -22,7 +25,6 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -44,6 +46,7 @@ class DottoWidget : GlanceAppWidget() {
             val checked = repo.isCheckedIn(habit.id, today)
             val stats = repo.getStats(habit.id)
             WidgetHabit(
+                id = habit.id,
                 name = habit.name,
                 color = habit.color,
                 isChecked = checked,
@@ -58,11 +61,27 @@ class DottoWidget : GlanceAppWidget() {
 }
 
 private data class WidgetHabit(
+    val id: Long,
     val name: String,
     val color: Int,
     val isChecked: Boolean,
     val streak: Int
 )
+
+private val HabitIdKey = ActionParameters.Key<Long>("habit_id")
+
+class ToggleCheckInAction : ActionCallback {
+    override suspend fun onAction(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters
+    ) {
+        val habitId = parameters[HabitIdKey] ?: return
+        val app = context.applicationContext as DottoApp
+        app.habitRepository.toggleCheckIn(habitId, LocalDate.now())
+        DottoWidget().update(context, glanceId)
+    }
+}
 
 @Composable
 private fun WidgetContent(habits: List<WidgetHabit>) {
@@ -70,8 +89,7 @@ private fun WidgetContent(habits: List<WidgetHabit>) {
         modifier = GlanceModifier
             .fillMaxSize()
             .background(GlanceTheme.colors.background)
-            .padding(12.dp)
-            .clickable(actionStartActivity<MainActivity>()),
+            .padding(12.dp),
         verticalAlignment = Alignment.Top
     ) {
         Text(
@@ -80,7 +98,8 @@ private fun WidgetContent(habits: List<WidgetHabit>) {
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = GlanceTheme.colors.onBackground
-            )
+            ),
+            modifier = GlanceModifier.clickable(actionStartActivity<MainActivity>())
         )
         Spacer(modifier = GlanceModifier.height(8.dp))
 
@@ -90,7 +109,8 @@ private fun WidgetContent(habits: List<WidgetHabit>) {
                 style = TextStyle(
                     fontSize = 13.sp,
                     color = GlanceTheme.colors.onBackground
-                )
+                ),
+                modifier = GlanceModifier.clickable(actionStartActivity<MainActivity>())
             )
         } else {
             habits.forEach { habit ->
@@ -107,32 +127,47 @@ private fun WidgetHabitRow(habit: WidgetHabit) {
         modifier = GlanceModifier.fillMaxWidth().padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Check mark area — tap to toggle check-in
         Text(
             text = if (habit.isChecked) "✓" else "○",
             style = TextStyle(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = ColorProvider(habit.color)
-            )
-        )
-        Spacer(modifier = GlanceModifier.width(8.dp))
-        Text(
-            text = habit.name,
-            style = TextStyle(
-                fontSize = 13.sp,
-                color = GlanceTheme.colors.onBackground
             ),
-            maxLines = 1
-        )
-        if (habit.streak > 0) {
-            Spacer(modifier = GlanceModifier.width(4.dp))
-            Text(
-                text = "${habit.streak}d",
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    color = GlanceTheme.colors.onBackground
+            modifier = GlanceModifier
+                .padding(end = 8.dp)
+                .clickable(
+                    actionRunCallback<ToggleCheckInAction>(
+                        actionParametersOf(HabitIdKey to habit.id)
+                    )
                 )
+        )
+        // Name + streak — tap to open app
+        Row(
+            modifier = GlanceModifier
+                .defaultWeight()
+                .clickable(actionStartActivity<MainActivity>()),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = habit.name,
+                style = TextStyle(
+                    fontSize = 13.sp,
+                    color = GlanceTheme.colors.onBackground
+                ),
+                maxLines = 1
             )
+            if (habit.streak > 0) {
+                Spacer(modifier = GlanceModifier.width(4.dp))
+                Text(
+                    text = "${habit.streak}d",
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        color = GlanceTheme.colors.onBackground
+                    )
+                )
+            }
         }
     }
 }

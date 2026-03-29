@@ -29,4 +29,10 @@ interface CheckInDao {
 
     @Query("DELETE FROM check_ins WHERE habitId = :habitId AND date = :date")
     suspend fun delete(habitId: Long, date: String)
+
+    @Query("UPDATE check_ins SET comment = :comment WHERE habitId = :habitId AND date = :date")
+    suspend fun updateComment(habitId: Long, date: String, comment: String?)
+
+    @Query("SELECT * FROM check_ins WHERE habitId = :habitId ORDER BY date ASC")
+    suspend fun getAllByHabit(habitId: Long): List<CheckInEntity>
 }

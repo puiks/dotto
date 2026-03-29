@@ -63,7 +63,8 @@ fun DottoNavGraph(app: DottoApp) {
                 viewModel = viewModel,
                 onHabitClick = { habitId ->
                     navController.navigate(Routes.detail(habitId))
-                }
+                },
+                themePreference = app.themePreference
             )
         }
 

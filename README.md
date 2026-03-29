@@ -11,9 +11,14 @@ A minimalist daily habit tracker for Android. Every day, a new dot.
 Most habit trackers try to do too much. Dotto does one thing: help you show up every day. No goals, no charts, no social features. Just a daily tap and a growing streak.
 
 - **Zero friction** — open the app, tap the dot, done
+- **Widget check-in** — tap the dot right from your home screen
 - **Streak counter** — see how many days you've kept going
-- **Calendar view** — look back at your month and feel good
+- **Calendar + heatmap** — look back at your month and year
+- **Check-in notes** — add a short note to any check-in (50 chars)
 - **Retroactive check-in** — forgot yesterday? You can still mark it
+- **Milestones** — celebrations at 7, 30, 100, and 365 days
+- **Dark / Light / System theme** — switch from the top bar
+- **Backup & restore** — export/import your data as JSON
 - **No guilt** — streak breaks say "Today is a fresh start", not "You failed"
 
 ## Screenshots

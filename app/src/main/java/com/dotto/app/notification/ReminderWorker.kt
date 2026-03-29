@@ -42,12 +42,22 @@ class ReminderWorker(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val checkInIntent = Intent(context, CheckInReceiver::class.java).apply {
+            action = CheckInReceiver.ACTION_CHECK_IN
+            putExtra(CheckInReceiver.EXTRA_HABIT_ID, habitId)
+        }
+        val checkInPendingIntent = PendingIntent.getBroadcast(
+            context, habitId.toInt() + 10000, checkInIntent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(habit.name)
             .setContentText("Time to check in today!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
+            .addAction(R.drawable.ic_notification, "Check in ✓", checkInPendingIntent)
             .setAutoCancel(true)
             .build()
 

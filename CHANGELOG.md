@@ -4,6 +4,22 @@ All notable changes to Dotto will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.2] - 2026-03-29
+
+### Added
+- Manual theme switching: cycle between System / Light / Dark via top bar icon
+- Widget one-tap check-in: tap the check mark on any habit row to toggle directly from widget
+- Notification quick check-in: "Check in ✓" action button on reminder notifications
+- Confetti animation on check-in (6-particle burst with spring physics)
+- Optional check-in comment (50 chars max): inline note field on home screen, long-press calendar date to edit in detail screen
+- Comment indicator dots on calendar dates that have notes
+- Data export/import (JSON via SAF): backup and restore all habits and check-in history
+- Database migration v2→v3 for check-in comment field
+
+### Changed
+- Color picker selected border: adaptive color instead of hard black (darkened for light colors, white for dark colors)
+- Version bumped to 0.1.2 (versionCode=6)
+
 ## [0.1.1] - 2026-03-29
 
 ### Added

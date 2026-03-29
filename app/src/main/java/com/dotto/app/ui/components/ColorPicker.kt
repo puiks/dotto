@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -73,7 +74,12 @@ fun ColorPicker(
                     .background(color)
                     .then(
                         if (isSelected) {
-                            Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                            val borderColor = if (color.luminance() > 0.4f) {
+                                color.copy(alpha = 1f).darken(0.35f)
+                            } else {
+                                Color.White.copy(alpha = 0.85f)
+                            }
+                            Modifier.border(3.dp, borderColor, CircleShape)
                         } else {
                             Modifier
                         }
@@ -95,4 +101,13 @@ fun ColorPicker(
             }
         }
     }
+}
+
+private fun Color.darken(fraction: Float): Color {
+    return Color(
+        red = red * (1f - fraction),
+        green = green * (1f - fraction),
+        blue = blue * (1f - fraction),
+        alpha = alpha
+    )
 }

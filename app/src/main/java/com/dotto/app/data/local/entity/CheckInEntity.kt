@@ -17,5 +17,6 @@ import androidx.room.ForeignKey
 )
 data class CheckInEntity(
     val habitId: Long,
-    val date: String // yyyy-MM-dd format
+    val date: String, // yyyy-MM-dd format
+    val comment: String? = null
 )

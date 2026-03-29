@@ -77,4 +77,14 @@ class FakeCheckInDao : CheckInDao {
     override suspend fun delete(habitId: Long, date: String) {
         checkIns.removeAll { it.habitId == habitId && it.date == date }
     }
+
+    override suspend fun updateComment(habitId: Long, date: String, comment: String?) {
+        val index = checkIns.indexOfFirst { it.habitId == habitId && it.date == date }
+        if (index >= 0) {
+            checkIns[index] = checkIns[index].copy(comment = comment)
+        }
+    }
+
+    override suspend fun getAllByHabit(habitId: Long): List<CheckInEntity> =
+        checkIns.filter { it.habitId == habitId }.sortedBy { it.date }
 }

@@ -12,8 +12,8 @@ android {
         applicationId = "com.dotto.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 5
-        versionName = "0.1.1"
+        versionCode = 6
+        versionName = "0.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -98,6 +98,9 @@ dependencies {
 
     // Glance (App Widget)
     implementation("androidx.glance:glance-appwidget:1.0.0")
+
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     // Room
     val roomVersion = "2.6.1"

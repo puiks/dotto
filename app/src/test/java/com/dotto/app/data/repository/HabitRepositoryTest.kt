@@ -124,6 +124,42 @@ class HabitRepositoryTest {
         assertEquals(3, repository.getStats(1L).totalCheckIns)
     }
 
+    // --- Comments ---
+
+    @Test
+    fun `updateComment stores comment on existing check-in`() = runTest {
+        val date = LocalDate.of(2024, 1, 15)
+        repository.toggleCheckIn(1L, date)
+
+        repository.updateComment(1L, date, "Felt great today")
+        assertEquals("Felt great today", repository.getComment(1L, date))
+    }
+
+    @Test
+    fun `updateComment truncates to 50 chars`() = runTest {
+        val date = LocalDate.of(2024, 1, 15)
+        repository.toggleCheckIn(1L, date)
+
+        val longComment = "a".repeat(60)
+        repository.updateComment(1L, date, longComment)
+        assertEquals(50, repository.getComment(1L, date)!!.length)
+    }
+
+    @Test
+    fun `updateComment with null clears comment`() = runTest {
+        val date = LocalDate.of(2024, 1, 15)
+        repository.toggleCheckIn(1L, date)
+        repository.updateComment(1L, date, "note")
+        repository.updateComment(1L, date, null)
+
+        assertEquals(null, repository.getComment(1L, date))
+    }
+
+    @Test
+    fun `getComment returns null when no check-in exists`() = runTest {
+        assertEquals(null, repository.getComment(1L, LocalDate.of(2024, 1, 15)))
+    }
+
     // --- Input Validation ---
 
     @Test(expected = IllegalArgumentException::class)

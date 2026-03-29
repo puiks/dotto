@@ -21,6 +21,10 @@
         </activity>
 
         <receiver
+            android:name=".notification.CheckInReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".widget.DottoWidgetReceiver"
             android:exported="true">
             <intent-filter>
