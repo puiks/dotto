@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-03-29
+
 ### Changed
 - Prepare Release workflow now auto-triggers Release workflow (no manual second step needed)
 - Release workflow supports manual dispatch via workflow_dispatch
