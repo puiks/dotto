@@ -6,8 +6,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-## [0.1.3] - 2026-03-29
-
 ### Added
 - Check-in bottom sheet: tapping check button now opens a modal with check-in toggle and comment input
 - Habit note field: add a personal note when creating or editing a habit (stored on the habit itself)
