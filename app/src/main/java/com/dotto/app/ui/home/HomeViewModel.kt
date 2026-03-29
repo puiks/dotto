@@ -78,9 +78,9 @@ class HomeViewModel(
         _uiState.value = _uiState.value.copy(milestoneStreak = null)
     }
 
-    fun addHabit(name: String, color: Int) {
+    fun addHabit(name: String, color: Int, note: String? = null) {
         viewModelScope.launch {
-            repository.addHabit(name, color)
+            repository.addHabit(name, color, note)
             // Flow will auto-update via observeHabits
         }
     }

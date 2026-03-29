@@ -12,5 +12,6 @@ data class HabitEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val sortOrder: Int = 0,
     val reminderHour: Int? = null,
-    val reminderMinute: Int? = null
+    val reminderMinute: Int? = null,
+    val note: String? = null
 )

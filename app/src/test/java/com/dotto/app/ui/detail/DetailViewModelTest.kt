@@ -79,7 +79,7 @@ class DetailViewModelTest {
         val viewModel = DetailViewModel(repository, 1L)
         advanceUntilIdle()
 
-        viewModel.updateHabit("Write", 0x00FF00)
+        viewModel.updateHabit("Write", 0x00FF00, null)
         advanceUntilIdle()
 
         assertEquals("Write", viewModel.uiState.value.habitName)

@@ -18,6 +18,7 @@ import java.time.YearMonth
 data class DetailUiState(
     val habitName: String = "",
     val habitColor: Int = 0,
+    val habitNote: String? = null,
     val currentStreak: Int = 0,
     val longestStreak: Int = 0,
     val totalCheckIns: Int = 0,
@@ -53,6 +54,7 @@ class DetailViewModel(
             _uiState.value = _uiState.value.copy(
                 habitName = habit.name,
                 habitColor = habit.color,
+                habitNote = habit.note,
                 currentStreak = stats.currentStreak,
                 longestStreak = stats.longestStreak,
                 totalCheckIns = stats.totalCheckIns,
@@ -132,11 +134,11 @@ class DetailViewModel(
         }
     }
 
-    fun updateHabit(name: String, color: Int) {
+    fun updateHabit(name: String, color: Int, note: String?) {
         viewModelScope.launch {
             val habit = repository.getHabitById(habitId) ?: return@launch
-            repository.updateHabit(habit.copy(name = name, color = color))
-            _uiState.value = _uiState.value.copy(habitName = name, habitColor = color)
+            repository.updateHabit(habit.copy(name = name, color = color, note = note))
+            _uiState.value = _uiState.value.copy(habitName = name, habitColor = color, habitNote = note)
         }
     }
 

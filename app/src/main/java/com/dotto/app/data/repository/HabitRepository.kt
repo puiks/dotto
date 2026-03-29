@@ -26,9 +26,9 @@ class HabitRepository(
 
     suspend fun getHabitById(id: Long): HabitEntity? = habitDao.getById(id)
 
-    suspend fun addHabit(name: String, color: Int): Long {
+    suspend fun addHabit(name: String, color: Int, note: String? = null): Long {
         require(name.isNotBlank()) { "Habit name cannot be empty" }
-        return habitDao.insert(HabitEntity(name = name.trim(), color = color))
+        return habitDao.insert(HabitEntity(name = name.trim(), color = color, note = note?.trim()))
     }
 
     suspend fun updateHabit(habit: HabitEntity) = habitDao.update(habit)
