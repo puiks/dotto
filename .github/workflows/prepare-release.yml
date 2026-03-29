@@ -84,3 +84,8 @@ jobs:
           git commit -m "Prepare release v${{ inputs.version }}"
           git tag -a "v${{ inputs.version }}" -m "Release v${{ inputs.version }}"
           git push origin main --follow-tags
+
+      - name: Trigger release workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run release.yml --ref "v${{ inputs.version }}" -f tag="v${{ inputs.version }}"
