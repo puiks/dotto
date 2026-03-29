@@ -17,7 +17,8 @@ data class HabitUiModel(
     val name: String,
     val color: Int,
     val isCheckedToday: Boolean,
-    val currentStreak: Int
+    val currentStreak: Int,
+    val comment: String? = null
 )
 
 data class HomeUiState(
@@ -44,12 +45,14 @@ class HomeViewModel(
                 val models = habits.map { habit ->
                     val isChecked = repository.isCheckedIn(habit.id, today)
                     val stats = repository.getStats(habit.id)
+                    val comment = if (isChecked) repository.getComment(habit.id, today) else null
                     HabitUiModel(
                         id = habit.id,
                         name = habit.name,
                         color = habit.color,
                         isCheckedToday = isChecked,
-                        currentStreak = stats.currentStreak
+                        currentStreak = stats.currentStreak,
+                        comment = comment
                     )
                 }
                 _uiState.value = HomeUiState(habits = models, isLoading = false)
@@ -89,6 +92,17 @@ class HomeViewModel(
         }
     }
 
+    fun updateComment(habitId: Long, comment: String) {
+        viewModelScope.launch {
+            val trimmed = comment.trim()
+            repository.updateComment(
+                habitId,
+                LocalDate.now(),
+                trimmed.ifEmpty { null }
+            )
+        }
+    }
+
     fun deleteHabit(habitId: Long) {
         viewModelScope.launch {
             repository.deleteHabit(habitId)
@@ -100,7 +114,8 @@ class HomeViewModel(
         val updated = _uiState.value.habits.map { habit ->
             val isChecked = repository.isCheckedIn(habit.id, today)
             val stats = repository.getStats(habit.id)
-            habit.copy(isCheckedToday = isChecked, currentStreak = stats.currentStreak)
+            val comment = if (isChecked) repository.getComment(habit.id, today) else null
+            habit.copy(isCheckedToday = isChecked, currentStreak = stats.currentStreak, comment = comment)
         }
         _uiState.value = _uiState.value.copy(habits = updated)
     }

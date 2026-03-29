@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,6 +53,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.dotto.app.ui.components.ConfettiEffect
 import com.dotto.app.ui.home.HabitUiModel
 import com.dotto.app.ui.theme.UncheckedColor
 
@@ -63,6 +65,7 @@ fun HabitCard(
     onClick: () -> Unit,
     onRename: (String) -> Unit,
     onDelete: () -> Unit,
+    onCommentChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -74,6 +77,7 @@ fun HabitCard(
         mutableStateOf(TextFieldValue(habit.name, TextRange(habit.name.length)))
     }
     val focusRequester = remember { FocusRequester() }
+    var showConfetti by remember { mutableStateOf(false) }
 
     val checkScale by animateFloatAsState(
         targetValue = if (habit.isCheckedToday) 1f else 0.85f,
@@ -239,38 +243,97 @@ fun HabitCard(
                     }
                 }
             } else {
-                // Check button
+                // Check button with confetti
                 val checkLabel = if (habit.isCheckedToday) "Uncheck ${habit.name}" else "Check in ${habit.name}"
                 Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onToggle()
-                        }
-                        .semantics { contentDescription = checkLabel },
+                    modifier = Modifier.size(48.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
                         modifier = Modifier
                             .size(48.dp)
-                            .scale(checkScale)
                             .clip(CircleShape)
-                            .background(checkBgColor),
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (!habit.isCheckedToday) showConfetti = true
+                                onToggle()
+                            }
+                            .semantics { contentDescription = checkLabel },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (habit.isCheckedToday) {
-                            Text(
-                                text = "✓",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .scale(checkScale)
+                                .clip(CircleShape)
+                                .background(checkBgColor),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (habit.isCheckedToday) {
+                                Text(
+                                    text = "✓",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
                         }
+                    }
+                    ConfettiEffect(
+                        color = habitColor,
+                        trigger = showConfetti,
+                        modifier = Modifier.size(80.dp)
+                    )
+                }
+
+                // Reset confetti after animation
+                LaunchedEffect(showConfetti) {
+                    if (showConfetti) {
+                        kotlinx.coroutines.delay(800)
+                        showConfetti = false
                     }
                 }
             }
+        }
+
+        // Comment field — only visible when checked in today, not in edit mode
+        if (habit.isCheckedToday && !isEditing) {
+            var commentText by remember(habit.id, habit.comment) {
+                mutableStateOf(habit.comment ?: "")
+            }
+            BasicTextField(
+                value = commentText,
+                onValueChange = { newValue ->
+                    if (newValue.length <= 50) {
+                        commentText = newValue
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 32.dp, end = 16.dp, bottom = 12.dp),
+                textStyle = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                singleLine = true,
+                cursorBrush = SolidColor(habitColor),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    onCommentChange(commentText)
+                    focusManager.clearFocus()
+                }),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (commentText.isEmpty()) {
+                            Text(
+                                text = "Add a note...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
         }
     }
 }

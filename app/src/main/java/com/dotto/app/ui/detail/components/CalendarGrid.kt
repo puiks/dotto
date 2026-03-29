@@ -1,14 +1,18 @@
 package com.dotto.app.ui.detail.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -41,8 +45,10 @@ import java.util.Locale
 fun CalendarGrid(
     yearMonth: YearMonth,
     checkedDates: Set<LocalDate>,
+    commentsByDate: Map<LocalDate, String> = emptyMap(),
     habitColor: Color,
     onDateClick: (LocalDate) -> Unit,
+    onDateLongClick: (LocalDate) -> Unit = {},
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     modifier: Modifier = Modifier
@@ -109,15 +115,18 @@ fun CalendarGrid(
                     val cellIndex = row * 7 + col
                     val dayNumber = cellIndex - offset + 1
 
+                    @OptIn(ExperimentalFoundationApi::class)
                     if (dayNumber in 1..daysInMonth) {
                         val date = yearMonth.atDay(dayNumber)
                         val isChecked = date in checkedDates
                         val isToday = date == today
                         val isFuture = date.isAfter(today)
+                        val hasComment = date in commentsByDate
 
                         val dateDesc = buildString {
                             append("${yearMonth.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)} $dayNumber")
                             if (isChecked) append(", checked")
+                            if (hasComment) append(", has note")
                             if (isToday) append(", today")
                             if (isFuture) append(", future")
                         }
@@ -139,10 +148,18 @@ fun CalendarGrid(
                                 )
                                 .then(
                                     if (!isFuture) {
-                                        Modifier.clickable {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onDateClick(date)
-                                        }
+                                        Modifier.combinedClickable(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onDateClick(date)
+                                            },
+                                            onLongClick = {
+                                                if (isChecked) {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onDateLongClick(date)
+                                                }
+                                            }
+                                        )
                                     } else {
                                         Modifier
                                     }
@@ -160,6 +177,17 @@ fun CalendarGrid(
                                 },
                                 fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
                             )
+                            // Comment indicator dot
+                            if (hasComment) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .offset(y = (-2).dp)
+                                        .size(4.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isChecked) Color.White.copy(alpha = 0.7f) else habitColor)
+                                )
+                            }
                         }
                     } else {
                         Box(modifier = Modifier.weight(1f).aspectRatio(1f))

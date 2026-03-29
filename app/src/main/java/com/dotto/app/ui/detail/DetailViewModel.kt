@@ -23,6 +23,7 @@ data class DetailUiState(
     val totalCheckIns: Int = 0,
     val currentMonth: YearMonth = YearMonth.now(),
     val checkedDates: Set<LocalDate> = emptySet(),
+    val commentsByDate: Map<LocalDate, String> = emptyMap(),
     val heatmapDates: Set<LocalDate> = emptySet(),
     val reminderHour: Int? = null,
     val reminderMinute: Int? = null,
@@ -69,7 +70,13 @@ class DetailViewModel(
                 repository.observeCheckInsForMonth(habitId, month.year, month.monthValue)
             }.collect { checkIns ->
                 val dates = checkIns.map { LocalDate.parse(it.date) }.toSet()
-                _uiState.value = _uiState.value.copy(checkedDates = dates)
+                val comments = checkIns
+                    .filter { !it.comment.isNullOrBlank() }
+                    .associate { LocalDate.parse(it.date) to it.comment!! }
+                _uiState.value = _uiState.value.copy(
+                    checkedDates = dates,
+                    commentsByDate = comments
+                )
             }
         }
     }
@@ -99,6 +106,13 @@ class DetailViewModel(
                 totalCheckIns = stats.totalCheckIns
             )
             loadHeatmap()
+        }
+    }
+
+    fun updateComment(date: LocalDate, comment: String) {
+        viewModelScope.launch {
+            val trimmed = comment.trim()
+            repository.updateComment(habitId, date, trimmed.ifEmpty { null })
         }
     }
 

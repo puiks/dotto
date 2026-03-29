@@ -59,6 +59,16 @@ class HabitRepository(
         }
     }
 
+    suspend fun updateComment(habitId: Long, date: LocalDate, comment: String?) {
+        val dateStr = date.format(dateFormatter)
+        checkInDao.updateComment(habitId, dateStr, comment?.take(50)?.trim())
+    }
+
+    suspend fun getComment(habitId: Long, date: LocalDate): String? {
+        val dateStr = date.format(dateFormatter)
+        return checkInDao.get(habitId, dateStr)?.comment
+    }
+
     suspend fun isCheckedIn(habitId: Long, date: LocalDate): Boolean {
         val dateStr = date.format(dateFormatter)
         return checkInDao.get(habitId, dateStr) != null
