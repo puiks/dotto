@@ -33,12 +33,23 @@ jobs:
             exit 1
           fi
 
-      - name: Check CHANGELOG.md has entry for this version
+      - name: Check CHANGELOG.md has Unreleased section with content
         run: |
-          if ! grep -q "## \[${{ inputs.version }}\]" CHANGELOG.md; then
-            echo "::error::CHANGELOG.md has no entry for version ${{ inputs.version }}. Add it in your PR first."
+          if ! grep -q "## \[Unreleased\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no [Unreleased] section."
             exit 1
           fi
+          # Extract content between [Unreleased] and the next ## heading (or EOF)
+          CONTENT=$(sed -n '/## \[Unreleased\]/,/^## \[/{ /^## \[/d; p; }' CHANGELOG.md | grep -v '^$' || true)
+          if [ -z "$CONTENT" ]; then
+            echo "::error::CHANGELOG.md [Unreleased] section is empty. Add changes in your PR first."
+            exit 1
+          fi
+
+      - name: Replace [Unreleased] with version and date
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          sed -i "s/## \[Unreleased\]/## [Unreleased]\n\n## [${{ inputs.version }}] - $DATE/" CHANGELOG.md
 
       - name: Bump versionCode and versionName in build.gradle.kts
         run: |
@@ -54,7 +65,7 @@ jobs:
         run: |
           VERSION="${{ inputs.version }}"
           GRADLE_VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
-          CHANGELOG_VERSION=$(grep -oP '## \[\K[0-9.]+' CHANGELOG.md | head -1)
+          CHANGELOG_VERSION=$(grep -oP '## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1)
 
           echo "build.gradle.kts versionName: $GRADLE_VERSION"
           echo "CHANGELOG latest version:     $CHANGELOG_VERSION"
@@ -69,7 +80,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/build.gradle.kts
+          git add app/build.gradle.kts CHANGELOG.md
           git commit -m "Prepare release v${{ inputs.version }}"
           git tag "v${{ inputs.version }}"
           git push origin main --follow-tags

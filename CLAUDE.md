@@ -114,30 +114,29 @@ KEYSTORE_PASSWORD=xxx KEY_ALIAS=xxx KEY_PASSWORD=xxx ./gradlew assembleRelease
 - Semantic versioning: `MAJOR.MINOR.PATCH` (currently 0.x.y)
 - `versionCode` increments with every release (integer, monotonic)
 - `versionName` matches the git tag without the `v` prefix (e.g., tag `v0.1.0` → `versionName = "0.1.0"`)
-- `CHANGELOG.md` must have a `## [X.Y.Z]` section matching the version being released
+- `CHANGELOG.md` uses `## [Unreleased]` for in-progress changes; the workflow converts it to a versioned entry
 
-**Pre-tag checklist** (all three must be true before tagging):
-1. `app/build.gradle.kts` → `versionName` = target version, `versionCode` = previous + 1
-2. `CHANGELOG.md` → `## [X.Y.Z] - YYYY-MM-DD` section exists with changes listed
-3. Git tag = `vX.Y.Z` matching the above
-
-If any of the three is out of sync, **stop and fix before proceeding.**
+**Pre-tag checklist** (automated by Prepare Release workflow):
+1. `app/build.gradle.kts` → `versionName` and `versionCode` bumped by workflow
+2. `CHANGELOG.md` → `[Unreleased]` converted to `[X.Y.Z] - YYYY-MM-DD`
+3. Git tag = `vX.Y.Z` created by workflow
 
 ### Release Process (Automated)
 
 Release is handled by two GitHub Actions workflows:
 
-1. **In your PR**: add `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md` with changes listed. Do NOT modify `versionCode` or `versionName` — the workflow handles that.
+1. **In your PR**: add changes under the `## [Unreleased]` section in `CHANGELOG.md`. Do NOT modify `versionCode`, `versionName`, or the version heading — the workflow handles all of that.
 2. **Merge the PR** to main.
 3. **Run the "Prepare Release" workflow** (Actions → Prepare Release → Run workflow): only input the version number (e.g. `0.1.3`). The workflow will:
    - Validate version format and check tag doesn't already exist
-   - Verify `CHANGELOG.md` has a `## [X.Y.Z]` section (fails if missing)
+   - Verify `CHANGELOG.md` has a non-empty `[Unreleased]` section (fails if empty)
+   - Replace `[Unreleased]` with `[X.Y.Z] - YYYY-MM-DD` and add a fresh empty `[Unreleased]` heading
    - Auto-increment `versionCode` and set `versionName` in `build.gradle.kts`
-   - Commit, create git tag `vX.Y.Z`, and push
+   - Commit both files, create git tag `vX.Y.Z`, and push
 4. **Tag push auto-triggers the "Release" workflow**, which:
    - Runs tests
    - Builds signed release APK (keystore via GitHub Secrets)
    - Extracts changelog for the version
    - Creates a GitHub Release with the APK attached
 
-**Key rule**: CHANGELOG content goes in the PR, version bumping is done by the workflow. Never manually edit `versionCode`/`versionName` for a release.
+**Key rule**: PR 只写 `[Unreleased]` 下的变更内容，版本号和日期全部由 workflow 自动处理。Never manually edit `versionCode`/`versionName` for a release.

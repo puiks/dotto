@@ -4,7 +4,7 @@ All notable changes to Dotto will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.1.3] - 2026-03-29
+## [Unreleased]
 
 ### Added
 - Check-in bottom sheet: tapping check button now opens a modal with check-in toggle and comment input
