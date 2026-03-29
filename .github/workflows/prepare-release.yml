@@ -1,0 +1,93 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g. 0.1.3)'
+        required: true
+        type: string
+      changelog:
+        description: 'Changelog entries (one per line, no leading dash needed)'
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate version format
+        run: |
+          if ! echo "${{ inputs.version }}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version must be in X.Y.Z format"
+            exit 1
+          fi
+
+      - name: Check version not already tagged
+        run: |
+          if git tag -l "v${{ inputs.version }}" | grep -q .; then
+            echo "::error::Tag v${{ inputs.version }} already exists"
+            exit 1
+          fi
+
+      - name: Bump versionCode and versionName in build.gradle.kts
+        run: |
+          FILE="app/build.gradle.kts"
+          # Increment versionCode by 1
+          CURRENT_CODE=$(grep -oP 'versionCode = \K[0-9]+' "$FILE")
+          NEW_CODE=$((CURRENT_CODE + 1))
+          sed -i "s/versionCode = $CURRENT_CODE/versionCode = $NEW_CODE/" "$FILE"
+          # Update versionName
+          sed -i "s/versionName = \".*\"/versionName = \"${{ inputs.version }}\"/" "$FILE"
+          echo "versionCode: $CURRENT_CODE → $NEW_CODE"
+          echo "versionName: → ${{ inputs.version }}"
+
+      - name: Update CHANGELOG.md
+        run: |
+          VERSION="${{ inputs.version }}"
+          DATE=$(date +%Y-%m-%d)
+          ENTRIES="${{ inputs.changelog }}"
+
+          # Build the new section
+          SECTION="## [$VERSION] - $DATE\n\n### Added"
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            # Strip leading "- " if user included it
+            line="${line#- }"
+            SECTION="$SECTION\n- $line"
+          done <<< "$ENTRIES"
+          SECTION="$SECTION\n"
+
+          # Insert after the header lines (line 5, after the format note)
+          sed -i "5a\\
+          \\
+          $SECTION" CHANGELOG.md
+
+      - name: Verify three-way consistency
+        run: |
+          VERSION="${{ inputs.version }}"
+          GRADLE_VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          CHANGELOG_VERSION=$(grep -oP '## \[\K[0-9.]+' CHANGELOG.md | head -1)
+
+          echo "build.gradle.kts versionName: $GRADLE_VERSION"
+          echo "CHANGELOG latest version:     $CHANGELOG_VERSION"
+          echo "Input version:                $VERSION"
+
+          if [ "$GRADLE_VERSION" != "$VERSION" ] || [ "$CHANGELOG_VERSION" != "$VERSION" ]; then
+            echo "::error::Version mismatch! Aborting."
+            exit 1
+          fi
+
+      - name: Commit and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/build.gradle.kts CHANGELOG.md
+          git commit -m "Prepare release v${{ inputs.version }}"
+          git tag "v${{ inputs.version }}"
+          git push origin main --follow-tags
