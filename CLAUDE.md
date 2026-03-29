@@ -123,11 +123,21 @@ KEYSTORE_PASSWORD=xxx KEY_ALIAS=xxx KEY_PASSWORD=xxx ./gradlew assembleRelease
 
 If any of the three is out of sync, **stop and fix before proceeding.**
 
-### Release Process
-1. Decide the new version number `X.Y.Z`
-2. Update `versionCode` (+1) and `versionName` (`"X.Y.Z"`) in `app/build.gradle.kts`
-3. Add `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md`
-4. Commit these changes (e.g., `Prepare release vX.Y.Z`)
-5. Tag `vX.Y.Z` on the release commit, push tag — GitHub Actions builds and publishes
-6. Release APK is signed with the project keystore via GitHub Secrets
-7. R8 minification and resource shrinking are enabled for release builds
+### Release Process (Automated)
+
+Release is handled by two GitHub Actions workflows:
+
+1. **In your PR**: add `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md` with changes listed. Do NOT modify `versionCode` or `versionName` — the workflow handles that.
+2. **Merge the PR** to main.
+3. **Run the "Prepare Release" workflow** (Actions → Prepare Release → Run workflow): only input the version number (e.g. `0.1.3`). The workflow will:
+   - Validate version format and check tag doesn't already exist
+   - Verify `CHANGELOG.md` has a `## [X.Y.Z]` section (fails if missing)
+   - Auto-increment `versionCode` and set `versionName` in `build.gradle.kts`
+   - Commit, create git tag `vX.Y.Z`, and push
+4. **Tag push auto-triggers the "Release" workflow**, which:
+   - Runs tests
+   - Builds signed release APK (keystore via GitHub Secrets)
+   - Extracts changelog for the version
+   - Creates a GitHub Release with the APK attached
+
+**Key rule**: CHANGELOG content goes in the PR, version bumping is done by the workflow. Never manually edit `versionCode`/`versionName` for a release.
