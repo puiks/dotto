@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
 object ReminderScheduler {
 
     fun schedule(context: Context, habitId: Long, hour: Int, minute: Int) {
+        val wm = WorkManager.getInstance(context)
         val now = LocalDateTime.now()
         var target = now.toLocalDate().atTime(LocalTime.of(hour, minute))
         if (target.isBefore(now)) {
@@ -25,12 +26,11 @@ object ReminderScheduler {
             .setInputData(workDataOf(ReminderWorker.KEY_HABIT_ID to habitId))
             .build()
 
-        WorkManager.getInstance(context)
-            .enqueueUniquePeriodicWork(
-                workName(habitId),
-                ExistingPeriodicWorkPolicy.UPDATE,
-                request
-            )
+        wm.enqueueUniquePeriodicWork(
+            workName(habitId),
+            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            request
+        )
     }
 
     fun cancel(context: Context, habitId: Long) {

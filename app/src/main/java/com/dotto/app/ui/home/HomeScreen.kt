@@ -53,6 +53,7 @@ import com.dotto.app.R
 import com.dotto.app.data.ThemeMode
 import com.dotto.app.data.ThemePreference
 import com.dotto.app.ui.components.AddHabitSheet
+import com.dotto.app.ui.components.CheckInSheet
 import com.dotto.app.ui.components.MilestoneOverlay
 import com.dotto.app.ui.home.components.EmptyState
 import com.dotto.app.ui.home.components.HabitCard
@@ -79,6 +80,7 @@ fun HomeScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showImportConfirm by remember { mutableStateOf(false) }
+    var checkInHabit by remember { mutableStateOf<HabitUiModel?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -224,14 +226,13 @@ fun HomeScreen(
                         items(state.habits, key = { it.id }) { habit ->
                             HabitCard(
                                 habit = habit,
-                                onToggle = { viewModel.toggleCheckIn(habit.id) },
+                                onCheckInClick = { checkInHabit = habit },
                                 onClick = { onHabitClick(habit.id) },
                                 onRename = { newName -> viewModel.renameHabit(habit.id, newName) },
                                 onDelete = {
                                     habitToDelete = habit
                                     showDeleteConfirm = true
-                                },
-                                onCommentChange = { comment -> viewModel.updateComment(habit.id, comment) }
+                                }
                             )
                         }
                     }
@@ -251,8 +252,8 @@ fun HomeScreen(
     if (showAddSheet) {
         AddHabitSheet(
             onDismiss = { showAddSheet = false },
-            onSave = { name, color ->
-                viewModel.addHabit(name, color)
+            onSave = { name, color, note ->
+                viewModel.addHabit(name, color, note)
                 showAddSheet = false
             }
         )
@@ -277,6 +278,22 @@ fun HomeScreen(
                     Text("Cancel")
                 }
             }
+        )
+    }
+
+    // Check-in sheet
+    checkInHabit?.let { habit ->
+        CheckInSheet(
+            habitName = habit.name,
+            habitColor = androidx.compose.ui.graphics.Color(habit.color),
+            date = LocalDate.now(),
+            isChecked = habit.isCheckedToday,
+            existingComment = habit.comment,
+            onToggle = { viewModel.toggleCheckIn(habit.id) },
+            onCommentSave = { comment ->
+                viewModel.updateComment(habit.id, comment ?: "")
+            },
+            onDismiss = { checkInHabit = null }
         )
     }
 

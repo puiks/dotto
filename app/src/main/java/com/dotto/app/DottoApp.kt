@@ -5,6 +5,10 @@ import com.dotto.app.data.BackupManager
 import com.dotto.app.data.ThemePreference
 import com.dotto.app.data.local.DottoDatabase
 import com.dotto.app.data.repository.HabitRepository
+import com.dotto.app.notification.ReminderScheduler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class DottoApp : Application() {
 
@@ -32,5 +36,14 @@ class DottoApp : Application() {
             habitDao = database.habitDao(),
             checkInDao = database.checkInDao()
         )
+        CoroutineScope(Dispatchers.IO).launch { rescheduleAllReminders() }
+    }
+
+    suspend fun rescheduleAllReminders() {
+        habitRepository.getHabitsWithReminders().forEach { habit ->
+            val hour = habit.reminderHour ?: return@forEach
+            val minute = habit.reminderMinute ?: return@forEach
+            ReminderScheduler.schedule(this@DottoApp, habit.id, hour, minute)
+        }
     }
 }

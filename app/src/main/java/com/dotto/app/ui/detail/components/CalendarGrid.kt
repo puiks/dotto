@@ -154,10 +154,8 @@ fun CalendarGrid(
                                                 onDateClick(date)
                                             },
                                             onLongClick = {
-                                                if (isChecked) {
-                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    onDateLongClick(date)
-                                                }
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onDateLongClick(date)
                                             }
                                         )
                                     } else {

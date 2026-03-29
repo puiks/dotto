@@ -4,6 +4,26 @@ All notable changes to Dotto will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.3] - 2026-03-29
+
+### Added
+- Check-in bottom sheet: tapping check button now opens a modal with check-in toggle and comment input
+- Habit note field: add a personal note when creating or editing a habit (stored on the habit itself)
+- Calendar check-in: tap any past date in the detail screen calendar to check in or add a comment via the same modal
+- Boot receiver: reminders now survive device reboots (BOOT_COMPLETED broadcast)
+- App-launch reminder recovery: all reminders are rescheduled when the app starts
+
+### Changed
+- Check-in comment moved from inline text field on home card to the new check-in bottom sheet
+- Home card shows comment as read-only preview (single line, ellipsis)
+- Calendar long-click no longer restricted to checked dates only
+- Reminder scheduling uses CANCEL_AND_REENQUEUE policy so time changes take effect immediately
+- Database migration v3→v4 for habit note column
+
+### Fixed
+- Notification reminders silently disappearing after device reboot or app update
+- Changing reminder time not taking effect until next cycle (was using UPDATE policy)
+
 ## [0.1.2] - 2026-03-29
 
 ### Added

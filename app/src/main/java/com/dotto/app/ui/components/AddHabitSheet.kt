@@ -30,14 +30,16 @@ import com.dotto.app.ui.theme.HabitColors
 @Composable
 fun AddHabitSheet(
     onDismiss: () -> Unit,
-    onSave: (name: String, color: Int) -> Unit,
+    onSave: (name: String, color: Int, note: String?) -> Unit,
     isEditMode: Boolean = false,
     initialName: String = "",
-    initialColor: Int = HabitColors.first().toArgb()
+    initialColor: Int = HabitColors.first().toArgb(),
+    initialNote: String? = null
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var name by remember { mutableStateOf(initialName) }
     var selectedColor by remember { mutableIntStateOf(initialColor) }
+    var note by remember { mutableStateOf(initialNote ?: "") }
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
@@ -87,13 +89,26 @@ fun AddHabitSheet(
                 onColorSelected = { selectedColor = it }
             )
 
+            Spacer(modifier = Modifier.height(20.dp))
+
+            OutlinedTextField(
+                value = note,
+                onValueChange = { note = it },
+                label = { Text("Note (optional)") },
+                placeholder = { Text("e.g. Why this habit matters") },
+                singleLine = false,
+                maxLines = 3,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Spacer(modifier = Modifier.height(28.dp))
 
             Button(
                 onClick = {
                     val trimmed = name.trim()
                     if (trimmed.isNotEmpty()) {
-                        onSave(trimmed, selectedColor)
+                        val trimmedNote = note.trim().ifEmpty { null }
+                        onSave(trimmed, selectedColor, trimmedNote)
                     }
                 },
                 enabled = name.trim().isNotEmpty(),

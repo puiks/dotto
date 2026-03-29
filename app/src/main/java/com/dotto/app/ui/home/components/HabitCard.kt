@@ -61,11 +61,10 @@ import com.dotto.app.ui.theme.UncheckedColor
 @Composable
 fun HabitCard(
     habit: HabitUiModel,
-    onToggle: () -> Unit,
+    onCheckInClick: () -> Unit,
     onClick: () -> Unit,
     onRename: (String) -> Unit,
     onDelete: () -> Unit,
-    onCommentChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -255,8 +254,7 @@ fun HabitCard(
                             .clip(CircleShape)
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                if (!habit.isCheckedToday) showConfetti = true
-                                onToggle()
+                                onCheckInClick()
                             }
                             .semantics { contentDescription = checkLabel },
                         contentAlignment = Alignment.Center
@@ -296,43 +294,17 @@ fun HabitCard(
             }
         }
 
-        // Comment field — only visible when checked in today, not in edit mode
-        if (habit.isCheckedToday && !isEditing) {
-            var commentText by remember(habit.id, habit.comment) {
-                mutableStateOf(habit.comment ?: "")
-            }
-            BasicTextField(
-                value = commentText,
-                onValueChange = { newValue ->
-                    if (newValue.length <= 50) {
-                        commentText = newValue
-                    }
-                },
+        // Show comment preview if checked in and has a comment
+        if (habit.isCheckedToday && !isEditing && !habit.comment.isNullOrBlank()) {
+            Text(
+                text = habit.comment,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 32.dp, end = 16.dp, bottom = 12.dp),
-                textStyle = MaterialTheme.typography.bodySmall.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                singleLine = true,
-                cursorBrush = SolidColor(habitColor),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    onCommentChange(commentText)
-                    focusManager.clearFocus()
-                }),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (commentText.isEmpty()) {
-                            Text(
-                                text = "Add a note...",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
+                    .padding(start = 32.dp, end = 16.dp, bottom = 12.dp)
             )
         }
     }

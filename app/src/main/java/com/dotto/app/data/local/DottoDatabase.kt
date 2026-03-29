@@ -13,7 +13,7 @@ import com.dotto.app.data.local.entity.HabitEntity
 
 @Database(
     entities = [HabitEntity::class, CheckInEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class DottoDatabase : RoomDatabase() {
@@ -35,13 +35,19 @@ abstract class DottoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE habits ADD COLUMN note TEXT DEFAULT NULL")
+            }
+        }
+
         fun create(context: Context): DottoDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
                 DottoDatabase::class.java,
                 "dotto.db"
             )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
         }
     }
