@@ -61,7 +61,7 @@ class HabitRepository(
 
     suspend fun updateComment(habitId: Long, date: LocalDate, comment: String?) {
         val dateStr = date.format(dateFormatter)
-        checkInDao.updateComment(habitId, dateStr, comment?.take(50)?.trim())
+        checkInDao.updateComment(habitId, dateStr, comment?.take(140)?.trim())
     }
 
     suspend fun getComment(habitId: Long, date: LocalDate): String? {

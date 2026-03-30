@@ -136,13 +136,13 @@ class HabitRepositoryTest {
     }
 
     @Test
-    fun `updateComment truncates to 50 chars`() = runTest {
+    fun `updateComment truncates to 140 chars`() = runTest {
         val date = LocalDate.of(2024, 1, 15)
         repository.toggleCheckIn(1L, date)
 
-        val longComment = "a".repeat(60)
+        val longComment = "a".repeat(160)
         repository.updateComment(1L, date, longComment)
-        assertEquals(50, repository.getComment(1L, date)!!.length)
+        assertEquals(140, repository.getComment(1L, date)!!.length)
     }
 
     @Test
