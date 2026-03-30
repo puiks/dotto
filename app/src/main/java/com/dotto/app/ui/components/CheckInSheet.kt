@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +33,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -60,7 +58,6 @@ fun CheckInSheet(
     onDismiss: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val focusManager = LocalFocusManager.current
     var commentText by remember(date, existingComment) {
         mutableStateOf(existingComment ?: "")
     }
@@ -142,18 +139,15 @@ fun CheckInSheet(
             if (checked) {
                 BasicTextField(
                     value = commentText,
-                    onValueChange = { if (it.length <= 50) commentText = it },
+                    onValueChange = { if (it.length <= 140) commentText = it },
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     ),
-                    singleLine = true,
+                    singleLine = false,
+                    maxLines = 4,
                     cursorBrush = SolidColor(habitColor),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = {
-                        save()
-                        focusManager.clearFocus()
-                    }),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                     decorationBox = { innerTextField ->
                         Box {
                             if (commentText.isEmpty()) {
@@ -168,7 +162,7 @@ fun CheckInSheet(
                     }
                 )
                 Text(
-                    text = "${commentText.length}/50",
+                    text = "${commentText.length}/140",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
